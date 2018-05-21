@@ -12,12 +12,12 @@ before_deploy:
   - cd release-builds/minerstat-darwin-x64
   - zip -r minerstat-asic-mac.zip .
   - git config --local user.name "coinscrow"
-  - git config --local user.email "hello@coinscrow.io"
+  - git config --local user.email "info@minerstat.com"
   - if [ -z "$TRAVIS_TAG" ] ; then TRAVIS_TAG=latest; fi
 deploy:
   provider: releases
   api_key:
-    secure: IGH/clCSkJPbW1pZ4C7eJww6wdjH3J3bc4O2/4jFyFfqXWhVbjrGtmr4rr0LJ4rlu5LCbsUnipi+pAASxdaJt2G0BmOMKIQgShLS2Yqe0MhAJeXubiZfF++b+OHaJ0RaK2POB8XKvD1HEIyHlYwYu7pOtHga/fRS2sVhj8RK3B5Cy3gtU0xYutpK8oKeUwHI9YtIsFVxs10Tidu09GArM6bD2mWG9oOzjoeT0gSCFRYDFoTHRTnWY7HB3iuuqoSjk4Us1N1axc/ZvbPIUPo+5jY5pGFxtddPqOctD8zUAQhGyZqy0EWo/jY00pDwc3Uup5h0G60a6K/FOjgculHLKZKWjbmnPzWJNH5W1ouEwLULj31mwU8qYxwojLt6Ux3eZ+yUbPtf6agZrbvKNkbx80z7lWxWDrc0E0L0clQIsSVCoBL/nnwW01Ee3OBHm19kwMxDZO9k4vHjbbhKRpBOkfz/BdubYhaHvXCkAAO0t3QYs8G6FagZOFHci/tdzVeINRn7kzm/kcajJkaNQgWwYUC2MygQsDbPx/LaR9j/weTlYR6KnHM92T8NgL6wtoP2CNWvsZZwBCatS8mQHIeVl6LT/wS6OTLfXPHQVjEfx4Ae9Y4cJ2QXT9sJlDZqMTAM2Epr4+HDJ7Ft63Bf7nL0KRGgOBNS36WvC3bS3RCZqh0=
+    secure: BvBe7C1glOsSs0WWnn58gORCwltuF/PPzGhsmaqggqMGaKJ0k2rtEDs9WMiK2LHL6dBShcRAL2EQQwwtwIVumOxhyA6r7PZtz9mBMiejpcJbHjS1oINHKDYqsyVuOiqqmbk0AlgU7xJJBFDNSrcWb8XKrL8wr3xipcreIvCxTh0d/hmsNNlAE+qdk346f1vx/b63JFJamWiFG2tBSJYBNAZkivPVqkipnz8mjqjRs/mkA/UOKXt3PxlOlK3P5QihnmsmgPqb2QVtHNwFsL0nOFX9VCtKfSCW1WoNKPgNcLbQEJ/BeHHKKLoFvEhRzzjaJsSCToRC2f8cBUNpzBheoG0EVqKby98VWNt5SlAimzttoVm5Q5Nx1ftJt1IWnRiZK9xTz2Txw2jQxKBtb3W3BGMgS+jBSQauoqexLekLXS2Did3Ygl76PKQ41UeMol86zYefmtPVZM1PmtX6/3RTvj03yK6Qpot2jFezHt1fp1/0raeqsd8iqxuZITnllIJxrxQ+AmI7YRDpIwfr/skV5gw8iuw6g0kGje3kQzgJ9SfPj/T+bWmB5Rca9IdyQOhaUhuKI+qJrtwtIkgPPpIQNWINDa4l5mUTZK+JCIWUDiuaoitAWJdV74M1PfgnMo1XFtL4g6Liu2VIuOzykr2DYVSZLFNkvff9oYI5PjXnBFg=
     file: "$TRAVIS_BUILD_DIR/release-builds/minerstat-darwin-x64/minerstat-asic-mac.zip"
   skip_cleanup: true
   overwrite: true
