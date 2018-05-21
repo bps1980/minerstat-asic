@@ -39,8 +39,7 @@ You can find the build tutorial [here](https://github.com/minerstat/minerstat-as
 
 
 
-/*
-
+## 
 
 ***© minerstat OÜ*** in 2018
 
@@ -50,6 +49,4 @@ You can find the build tutorial [here](https://github.com/minerstat/minerstat-as
 
 ***Mail:*** Sepapaja tn 6, Lasnamäe district, Tallinn city, Harju county, 15551, Estonia
 
-*/
-
-
+## 
