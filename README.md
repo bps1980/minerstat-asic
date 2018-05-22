@@ -28,7 +28,7 @@ continuous build - up to date with commits
 
 
 
-##  Build (for Developers) <img alt="Status" src="https://ci.appveyor.com/api/projects/status/github/minerstat/minerstat-asic?branch=master&svg=true" alt="Build">
+##  Build (for Developers) <img alt="Status" src="https://ci.appveyor.com/api/projects/status/github/coinscrow/minerstat-asic?branch=master&svg=true" alt="Build">
 
 This is only needed if you want to compile this software from source code.
 
