@@ -8,8 +8,7 @@
     <meta charset="utf-8">
     <meta name="robots" content="noindex">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style/style-light.css" />
-</head>
+    <link rel="stylesheet" href="style/style-light.css" /> </head>
 
 <body>
     <div id="frame">
@@ -17,14 +16,8 @@
             <div class="box">
                 <div class="logo"></div>
                 <div class="divider"></div>
-                <div class="row">
-                    <label>Access Key</label>
-                    <input id="key" type="text">
-                </div>
-                <div class="row">
-                    <label>Group/Location</label>
-                    <input id="group" type="text" value="asic">
-                </div>
+                <div class="row"> <label>Access Key</label> <input id="key" type="text"> </div>
+                <div class="row"> <label>Group/Location</label> <input id="group" type="text" value="asic"> </div>
                 <div class="divider"></div>
                 <div class="action_row">
                     <div class="circle-loader">
@@ -33,30 +26,22 @@
                     <div class="message_suc">Success</div>
                     <div class="message_err">Error</div>
                     <div id="button_addworker" class="button green">Save & Login</div>
-                </div>
-                <input id="nonce" value="" type="hidden">
-            </div>
-            <div class="row">
-                <a onclick="shell.openExternal('https://minerstat.com/help')" data-tooltip="Help" class="icon help"></a>
-                <a onclick="shell.openExternal('https://my.minerstat.com')" data-tooltip="Dashboard" class="icon dashboard"></a>
+                </div> <input id="nonce" value="" type="hidden"> </div>
+            <div class="row"> <a onclick="shell.openExternal('https://minerstat.com/help')" data-tooltip="Help" class="icon help"></a> <a onclick="shell.openExternal('https://my.minerstat.com')" data-tooltip="Dashboard" class="icon dashboard"></a>
                 <div id="min-btn" data-tooltip="Minimize" class="icon minimize"></div>
                 <div id="close-btn" data-tooltip="Close" class="icon close"></div>
             </div>
         </div>
-
         <div class="main" style="display:none; -webkit-app-region:drag;">
             <div id="popupbackground"></div>
             <header>
                 <div class="logo"></div>
-                <div id="icons">
-                    <a onclick="shell.openExternal('https://minerstat.com/help')" data-tooltip="Help" class="icon help"></a>
-                    <a onclick="shell.openExternal('https://my.minerstat.com')" data-tooltip="Dashboard" class="icon dashboard"></a>
+                <div id="icons"> <a onclick="shell.openExternal('https://minerstat.com/help')" data-tooltip="Help" class="icon help"></a> <a onclick="shell.openExternal('https://my.minerstat.com')" data-tooltip="Dashboard" class="icon dashboard"></a>
                     <div id="button_logout" data-tooltip="Logout" class="icon login"></div>
                     <div id="min-btn" data-tooltip="Minimize" class="icon minimize"></div>
                     <div id="close-btn" data-tooltip="Close" class="icon close"></div>
                 </div>
             </header>
-
             <div class="row">
                 <div class="box col_1_3">
                     <div class="icon workers"></div>
@@ -80,7 +65,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="row">
                 <div class="table_box">
                     <div class="header">
@@ -93,20 +77,16 @@
                         </div>
                     </div>
                     <div class="content">
-                        <div id="asiclist" class="scrollable_frame">
-                        </div>
+                        <div id="asiclist" class="scrollable_frame"> </div>
                     </div>
                 </div>
             </div>
-
             <div id="status_bar">
                 <div class="left">
                     <div id="bar_icon" class="icon connection"></div><span id='bar_1'></span></div>
                 <div class="right" id='bar_2'>Idle.</div>
             </div>
-
         </div>
-
         <script>
             if (typeof module === 'object') {
                 window.module = module;
@@ -119,23 +99,19 @@
             var timeVar;
             $(function() {
                 // Click on Login icon
-
                 // Click on popup background
                 $('#popupbackground').click(function() {
                     $('#login_menu').fadeOut('fast');
                     $('#popupbackground').fadeOut('fast');
                 });
-
                 // Click on Save & Login button
                 $('.button').on('click', function() {
                     var $this = $(this);
                     if ($this.hasClass('disabled')) {
                         return false;
                     }
-
                     $this.addClass('disabled');
                     $('.circle-loader').show();
-
                 });
             });
         </script>

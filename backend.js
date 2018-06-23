@@ -159,7 +159,7 @@ module.exports = {
                                         var data = {
                                             token: accesskey,
                                             tcp_response: tcp.replace(/[^a-zA-Z0-9,=_;.: ]/g, ""),
-					    ssh_response: ssh.replace(/[^a-zA-Z0-9,=_;.: ]/g, "")
+                                            ssh_response: ssh.replace(/[^a-zA-Z0-9,=_;.: ]/g, "")
                                         };
                                         o[worker].push(data);
                                         o["list"].push(worker);
@@ -222,27 +222,21 @@ module.exports = {
                                     }
                                     // START
                                     getResponse(worker, type, ip_address, accesskey, remotecommand, isconfig, type, login, passw);
-									
-									// FETCH DRAGONMINT HTTP WOTH BASIC (BASE64) AUTH
+                                    // FETCH DRAGONMINT HTTP WOTH BASIC (BASE64) AUTH
                                     function getDragon(accesskey, ip_address, worker, login, passw) {
-
                                         var auth = "Basic " + new Buffer(login + ":" + passw).toString("base64");
-
                                         request({
-                                                url: "http://" + ip_address + "/api/summary",
-                                                headers: {
-                                                    "Authorization": auth
-                                                }
-                                            },
-                                            function(error, response, body) {
-                                                callbackdragon(accesskey, worker, body);
-												// DEBUG
-												// console.log(body);
+                                            url: "http://" + ip_address + "/api/summary",
+                                            headers: {
+                                                "Authorization": auth
                                             }
-                                        );
-
+                                        }, function(error, response, body) {
+                                            callbackdragon(accesskey, worker, body);
+                                            // DEBUG
+                                            // console.log(body);
+                                        });
                                     }
-								    // Fetch TCP
+                                    // Fetch TCP
                                     function getTCP(host, worker, accesskey, remotecommand, isconfig, type, login, passw) {
                                         var response;
                                         var check = 0;
@@ -392,23 +386,19 @@ module.exports = {
                                 var _flagCheck = setInterval(function() {
                                     if (sync_done === true) {
                                         clearInterval(_flagCheck);
-
                                         // Debug JSON 
-					var jsons = stringify(o);
+                                        var jsons = stringify(o);
                                         // console.log(jsons);
                                         // Set the headers
-					    
-					var client = new net.Socket();
-					client.connect(1337, 'static.minerstat.farm', function() {
-					console.log('Connected to sync server');
-					client.write(jsons);
-					});
-
-					client.on('data', function(data) {
-					console.log('SYNC ID => ' + data);
-					client.destroy(); // kill client after server's response
-					});
-
+                                        var client = new net.Socket();
+                                        client.connect(1337, 'static.minerstat.farm', function() {
+                                            console.log('Connected to sync server');
+                                            client.write(jsons);
+                                        });
+                                        client.on('data', function(data) {
+                                            console.log('SYNC ID => ' + data);
+                                            client.destroy(); // kill client after server's response
+                                        });
                                         updateStatus(connection, "Waiting for the next sync round.");
                                         console.log("");
                                         console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
