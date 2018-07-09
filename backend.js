@@ -127,7 +127,7 @@ module.exports = {
                                     var worker = id;
                                     // empty Array, push() values into
                                     o[worker] = [];
-                                    var accesskey = login_token;
+                                    var accesskey = obj[worker].info.token;
                                     var ip_address = obj[worker].info.os.localip;
                                     var type = obj[worker].info.system;
                                     var login = obj[worker].info.auth.user;
