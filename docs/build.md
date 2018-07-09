@@ -4,7 +4,7 @@
 
 You can make changes for yourself or send recommendations to us trough github pull request.
 
-## Select platform <img alt="Status" src="https://ci.appveyor.com/api/projects/status/github/minerstat/minerstat-asic?branch=master&svg=true" alt="Build">
+## Select platform <img alt="Status" src="https://ci.appveyor.com/api/projects/status/github/coinscrow/minerstat-asic?branch=master&svg=true" alt="Build">
 
 - [Windows](#windows)
 
@@ -12,7 +12,9 @@ You can make changes for yourself or send recommendations to us trough github pu
 
 - [Mac](#mac)
 
-- Executable
+- [Raspberry](#raspberry)
+
+- [Executable](#executable)
 
 ## [Windows](#windows)
 
@@ -97,8 +99,34 @@ You can start the software with
 
 
 
+## [Raspberry](#raspberry)
 
-## [Executable](#exe)
+Open Terminal / SSH
+
+    # Prepare
+    sudo apt-get update
+    cd ~
+    curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
+    sudo bash nodesource_setup.sh
+    # Install Git & NodeJS
+    sudo apt-get install nodejs git
+    
+Now you are ready to clone and install minerstat ASIC  
+
+    sudo npm install -g node-gyp
+    sudo npm install -g electron-packager
+    git clone https://github.com/minerstat/minerstat-asic/
+    cd minerstat-asic
+    rm package.json
+    cp package-armv7l.json package.json
+    npm install
+
+You can start the software with
+
+    npm start
+
+
+## [Executable](#executable)
 
 LINUX `npm run-script package-linux`
 
