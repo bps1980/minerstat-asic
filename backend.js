@@ -278,6 +278,7 @@ module.exports = {
                                             host: ip_address,
                                             username: login,
                                             password: passw,
+											readyTimeout: 30000
                                         }).then(function() {
                                             // Command
                                             ssh2.execCommand(command, {
@@ -405,11 +406,11 @@ module.exports = {
                                         console.log(colors.cyan("[" + getDateTime() + "] " + "Waiting for the next sync round."));
                                         console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
                                         console.log("");
-                                        // Start New Round after 25 sec idle
+                                        // Start New Round after 40 sec idle
                                         setTimeout(function() {
                                             var main = require('./main');
                                             main.sync();
-                                        }, 25000);
+                                        }, 40000);
                                     }
                                 }, 5000); // interval set at 100 milliseconds
                             }
