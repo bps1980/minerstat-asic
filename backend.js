@@ -254,7 +254,7 @@ module.exports = {
                                                 callbacktcp(worker, "timeout", host, accesskey, remotecommand, isconfig, type, login, passw); // send response to callback function
                                                 clients.end(); // close connection
                                             }
-                                        }, 5000);
+                                        }, 15000);
                                         clients.on('data', (data) => {
                                             if (check === 0) {
                                                 response += data.toString();
