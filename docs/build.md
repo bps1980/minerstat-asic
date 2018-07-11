@@ -46,13 +46,13 @@ You can start the software with
 
 Open Terminal / SSH
 
+    # Install Dependencies
+    sudo apt-get install nodejs git g++ build-essential curl
     # Prepare
     sudo apt-get update
     cd ~
     curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
     sudo bash nodesource_setup.sh
-    # Install Git & NodeJS
-    sudo apt-get install nodejs git g++ build-essential
     
 Now you are ready to clone and install minerstat ASIC  
 
@@ -105,13 +105,13 @@ You can start the software with
 
 Open Terminal / SSH
 
+    # Install Dependencies
+    sudo apt-get install nodejs git g++ build-essential curl
     # Prepare
     sudo apt-get update
     cd ~
     curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
     sudo bash nodesource_setup.sh
-    # Install Git & NodeJS
-    sudo apt-get install nodejs git g++ build-essential
     
 Now you are ready to clone and install minerstat ASIC  
     
