@@ -52,7 +52,7 @@ Open Terminal / SSH
     curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
     sudo bash nodesource_setup.sh
     # Install Git & NodeJS
-    sudo apt-get install nodejs git
+    sudo apt-get install nodejs git g++ build-essential
     
 Now you are ready to clone and install minerstat ASIC  
 
@@ -90,6 +90,8 @@ Now you are ready to clone and install minerstat ASIC
     npm install -g electron-packager
     git clone https://github.com/minerstat/minerstat-asic/
     cd minerstat-asic
+    rm package.json
+    cp package-armv7l.json package.json
     npm install
 
 You can start the software with
@@ -109,10 +111,10 @@ Open Terminal / SSH
     curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
     sudo bash nodesource_setup.sh
     # Install Git & NodeJS
-    sudo apt-get install nodejs git
+    sudo apt-get install nodejs git g++ build-essential
     
 Now you are ready to clone and install minerstat ASIC  
-
+    
     sudo npm install -g node-gyp
     sudo npm install -g electron-packager
     git clone https://github.com/minerstat/minerstat-asic/
@@ -148,5 +150,3 @@ RASPBERRY PI `npm run-script package-pi`
 ***Mail:*** Sepapaja tn 6, Lasnamäe district, Tallinn city, Harju county, 15551, Estonia
 
 */
-
-
