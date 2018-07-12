@@ -287,7 +287,7 @@ module.exports = {
                                                 ssh2.execCommand(command, {
                                                     cwd: folder
                                                 }).then(function(result) {
-                                                    console.log("[" + getDateTime() + "] " + "Fetching SSH:" + ip_address);
+                                                    console.log("[" + getDateTime() + "] " + "Fetching SSH: "+worker+"" + "(" + ip_address + ")");
                                                     response = result.stdout;
                                                     response = response.trim();
                                                     callbackssh(worker, tcp, response, accesskey)
