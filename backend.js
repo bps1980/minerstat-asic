@@ -401,7 +401,10 @@ module.exports = {
                                             });
                                             client.on('data', function(data) {
                                                 console.log('SYNC ID => ' + data);
-                                                client.destroy(); // kill client after server's response
+						// keep connection for at least 8 seconds.
+						setTimeout(function() {
+                                                	client.destroy(); // kill client after server's response
+						 }, 8000);
                                             });
                                             updateStatus(connection, "Waiting for the next sync round.");
                                             console.log("");
