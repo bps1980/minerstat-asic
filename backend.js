@@ -189,6 +189,12 @@ module.exports = {
                                                     command = "bmminer-api stats; bmminer-api pools; ";
                                                     folder = "/root";
                                                 }
+						// ANTMINER E3
+						// Why? Bitmain Send CGMINER TCP Response from BMMINER   
+						if (tcp.indexOf("ether") > -1) {
+                                                    command = "bmminer-api stats; bmminer-api pools; ";
+                                                    folder = "/root";
+                                                }
                                                 if (remotecommand == "CONFIG") {
                                                     // PATH & COMMANDS
                                                     if (type == "antminer") {
@@ -196,6 +202,11 @@ module.exports = {
                                                             command = command + "wget -O cgminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         }
                                                         if (command.indexOf("bmminer") > -1) {
+                                                            command = command + "wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                        }
+							// ANTMINER E3
+							// Why? Bitmain Send CGMINER TCP Response from BMMINER  
+							if (command.indexOf("ether") > -1) {
                                                             command = command + "wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         }
                                                         folder = "/config";
@@ -335,6 +346,10 @@ module.exports = {
                                                             command = "cat cgminer.conf";
                                                         }
                                                         if (command.indexOf("bmminer") > -1) {
+                                                            command = "cat bmminer.conf";
+                                                        }
+							// ANTMINER E3
+							if (command.indexOf("ether") > -1) {
                                                             command = "cat bmminer.conf";
                                                         }
                                                         folder = "/config";
