@@ -199,20 +199,20 @@ module.exports = {
                                                     // PATH & COMMANDS
                                                     if (type == "antminer") {
                                                         if (command.indexOf("cgminer") > -1) {
-                                                            command = command + "wget -O cgminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                            command = command + "rm cgminer.conf; wget -O cgminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         }
                                                         if (command.indexOf("bmminer") > -1) {
-                                                            command = command + "wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                            command = command + "rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         }
 							// ANTMINER E3
 							// Why? Bitmain Send CGMINER TCP Response from BMMINER  
 							if (command.indexOf("ether") > -1) {
-                                                            command = command + "wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                            command = command + "rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         }
                                                         folder = "/config";
                                                     }
                                                     if (type == "baikal") {
-                                                        command = command + "wget -O miner.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                        command = command + "rm miner.conf; wget -O miner.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         folder = "/opt/scripta/etc";
                                                     }
                                                 }
