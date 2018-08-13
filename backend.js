@@ -419,7 +419,7 @@ module.exports = {
 						// keep connection for at least 8 seconds.
 						setTimeout(function() {
                                                 	client.destroy(); // kill client after server's response
-						 }, 8000);
+						 }, 30000);
                                             });
                                             updateStatus(connection, "Waiting for the next sync round.");
                                             console.log("");
