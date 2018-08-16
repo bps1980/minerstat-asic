@@ -174,13 +174,22 @@ module.exports = {
                                         //////////////////////////////////////////////////////////////
                                         async function callbacktcp(worker, tcp, host, accesskey, remotecommand, isconfig, type, login, passw) {
                                             var command, folder, ssh = "";
-                                            if (tcp == "timeout" && remotecommand != "CONFIG") {
-                                                console.log("[" + getDateTime() + "] " + worker + " - SSH Skipped - Reason: Worker inactive");
-                                                total_count++;
-                                                if (total_worker == total_count) {
-                                                    sync_done = true;
-                                                }
-                                            } else {
+                                            
+                                            if (tcp == "timeout") {
+                                                console.log("[" + getDateTime() + "] " + worker + " - TCP UNREACHABLE - Worker inactive?");
+                                                console.log("[" + getDateTime() + "] " + worker + " - TRY TO FETCH SSH - Worker inactive?");
+                                                //total_count++;
+                                                //if (total_worker == total_count) {
+                                                //    sync_done = true;
+                                                //}
+                                                
+                                                // NOTICE: UNKOWN INFO, SO FETCH EVERY POSSIBLE SOLUTION
+                                                command = "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools;";
+                                                folder = "/root";
+                                                
+                                            } 
+                                            else {
+                                            
                                                 if (tcp.indexOf("cgminer") > -1) {
                                                     command = "cgminer-api stats; cgminer-api pools; ";
                                                     folder = "/root";
@@ -189,35 +198,45 @@ module.exports = {
                                                     command = "bmminer-api stats; bmminer-api pools; ";
                                                     folder = "/root";
                                                 }
-						// ANTMINER E3
-						// Why? Bitmain Send CGMINER TCP Response from BMMINER   
-						if (tcp.indexOf("ether") > -1) {
+												// ANTMINER E3
+												// Why? Bitmain Send CGMINER TCP Response from BMMINER   
+												if (tcp.indexOf("ether") > -1) {
                                                     command = "bmminer-api stats; bmminer-api pools; ";
                                                     folder = "/root";
                                                 }
+                                                
+                                            }
+                                                
                                                 if (remotecommand == "CONFIG") {
                                                     // PATH & COMMANDS
                                                     if (type == "antminer") {
-                                                        if (command.indexOf("cgminer") > -1) {
-                                                            command = command + "rm cgminer.conf; wget -O cgminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
-                                                        }
-                                                        if (command.indexOf("bmminer") > -1) {
-                                                            command = command + "rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
-                                                        }
-							// ANTMINER E3
-							// Why? Bitmain Send CGMINER TCP Response from BMMINER  
-							if (command.indexOf("ether") > -1) {
-                                                            command = command + "rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
-                                                        }
+                                                        if (tcp == "timeout") {
+                                                        	console.log("[" + getDateTime() + "] " + worker + " - TCP CRASHED - COMMAND PENDING (CONFIG) - TRY TO REWRITE CONFIG");
+                                                        	command = command + "rm cgminer.conf; rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && wget -O cgminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 2 && echo done && /sbin/reboot";                                
+                                                        } else {
+                                                        
+                                                        	if (command.indexOf("cgminer") > -1) {
+                                                            	command = command + "rm cgminer.conf; wget -O cgminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                        	}
+                                                        	if (command.indexOf("bmminer") > -1) {
+                                                            	command = command + "rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                        	}
+                                                        	// ANTMINER E3
+															// Why? Bitmain Send CGMINER TCP Response from BMMINER  
+															if (command.indexOf("ether") > -1) {
+                                                            	command = command + "rm bmminer.conf; wget -O bmminer.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
+                                                        	}
+                                                    	}
                                                         folder = "/config";
                                                     }
+																				
                                                     if (type == "baikal") {
                                                         command = command + "rm miner.conf; wget -O miner.conf 'http://static.minerstat.farm/proxy.php?token=" + accesskey + "&worker=" + worker + "' && sleep 3 && echo done && /sbin/reboot";
                                                         folder = "/opt/scripta/etc";
                                                     }
                                                 }
                                                 ssh = await getSSH(host, login, passw, folder, command, worker, tcp, accesskey, remotecommand, isconfig, type)
-                                            }
+                                            //} // ELSE TIMEOUT
                                         }
                                         async function getResponse(worker, type, ip_address, token, remotecommand, isconfig, type, login, passw) {
                                             if (type === "antminer") {
