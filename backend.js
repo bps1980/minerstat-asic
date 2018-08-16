@@ -187,17 +187,26 @@ module.exports = {
                                                 command = "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools;";
                                                 folder = "/root";
                                                 
-                                            } 
-                                            else {
+                                            }
+                                        	else {
                                             
                                                 if (tcp.indexOf("cgminer") > -1) {
                                                     command = "cgminer-api stats; cgminer-api pools; ";
                                                     folder = "/root";
+                                                } else {
+                                                
+                                                 	if (tcp.indexOf("bmminer") > -1) {
+                                                    	command = "bmminer-api stats; bmminer-api pools; ";
+                                                    	folder = "/root";
+                                               		} else {                                             
+                                                		// NOTICE: UNKOWN INFO, SO FETCH EVERY POSSIBLE SOLUTION
+                                                		command = "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools;";
+                                                		folder = "/root";                                   
+                                                	}
+                                                
                                                 }
-                                                if (tcp.indexOf("bmminer") > -1) {
-                                                    command = "bmminer-api stats; bmminer-api pools; ";
-                                                    folder = "/root";
-                                                }
+                                               
+                                               	// PROTECTION
 												// ANTMINER E3
 												// Why? Bitmain Send CGMINER TCP Response from BMMINER   
 												if (tcp.indexOf("ether") > -1) {
