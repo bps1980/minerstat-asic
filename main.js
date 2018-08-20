@@ -101,9 +101,9 @@ setTimeout(function() {
 /*
 	Error Handling
 */
-//setTimeout(function() {
-//    restart();
-//}, 60 * 1000 * 20); // every 20 minutes
+setTimeout(function() {
+    restart();
+}, 60 * 1000 * 30); // every 30 minutes (2x a hour)
 // Why important to restart the application every 20 minutes?
 function restart() {
     app.relaunch()
