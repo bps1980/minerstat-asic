@@ -1,35 +1,35 @@
 /*
 	DEPENDENCIES
 */
-var async = require('neo-async');
-var backend = require('./backend');
-var colors = require('colors');
-var exec = require('child_process').exec
-var fs = require('fs');
-var lasterror = new Date;
-var request = require('request');
-const nets = require('net');
-var node_ssh = require('node-ssh');
-const path = require('path');
-const url = require('url');
-var ssh2 = new node_ssh();
-const jetpack = require('fs-jetpack');
+var async = require('neo-async'),
+	backend = require('./backend'),
+	colors = require('colors'),
+	exec = require('child_process').exec,
+	fs = require('fs'),
+	lasterror = new Date,
+	request = require('request'),
+	node_ssh = require('node-ssh'),
+	ssh2 = new node_ssh();
+const nets = require('net'),
+	  path = require('path'),
+	  url = require('url'),
+	  jetpack = require('fs-jetpack');
 /*
 	ELECTRON
 */
-const electron = require('electron')
-const app = electron.app
-const BrowserWindow = electron.BrowserWindow // Module to create native browser window.
-var fullpath = app.getPath("appData");
+const electron = require('electron'),
+	  app = electron.app,
+      BrowserWindow = electron.BrowserWindow,
+      fullpath = app.getPath("appData");
 /*
 	ERROR HANDLING
 */
 let mainWindow
 process.on('uncaughtException', function(err) {
-    console.log('Caught exception: ' + err);
+    console.log(colors.grey('NOTICE => %s'), err);
 });
 process.on('unhandledRejection', (reason, promise) => {
-    console.log('Unhandled Rejection at:', reason.stack || reason)
+    console.log(colors.grey('WARNING => %s %s'), reason.stack);
 })
 
 function createWindow() {
@@ -101,16 +101,13 @@ setTimeout(function() {
 /*
 	Error Handling
 */
-setTimeout(function() {
-    restart();
-}, 60 * 1000 * 30); // every 30 minutes (2x a hour)
-// Why important to restart the application every 20 minutes?
 function restart() {
     app.relaunch()
     app.exit()
 }
-// SSH dependency without additional reason stop working after a few hour.
-// To we make sure everything will work correctly, the software restart itself every hour 3x.
+/*
+	Core
+*/
 module.exports = {
     sync: function() {
         setTimeout(function() {
