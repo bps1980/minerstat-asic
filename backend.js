@@ -221,7 +221,7 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 // Background Process
 async function backgroundProcess(total_worker) {
 	if (maxThread >= totalSYNCWorker || maxThread == 0) {
-    	maxThread = 5; // 5 worker at once
+    	maxThread = 4; // worker at once
     	var startThread = 0;
     }
     function bgListener() {
