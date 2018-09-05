@@ -1,15 +1,15 @@
 /*
 	DEPENDENCIES
 */
+const remote = require('electron').remote;
 const {
     shell
 } = require('electron');
-const remote = require('electron').remote,
-	  jetpack = require('fs-jetpack'),
-	  electron = require('electron'),
-      app = remote.app;
-var   fs = require('fs'),
-	  fullpath = app.getPath("appData");
+var fs = require('fs');
+const jetpack = require('fs-jetpack');
+const electron = require('electron')
+const app = remote.app;
+var fullpath = app.getPath("appData");
 /*
 	FUNCTIONS
 */
@@ -146,19 +146,14 @@ function workersRefresh() {
 
     function loadWorkers(workersList) {
         try {
-            var json = JSON.stringify(workersList),
-                obj = parseJSON(json),
-            	total_worker = 0,
+            var json = JSON.stringify(workersList);
+            var obj = parseJSON(json);
+            var total_worker = 0,
                 total_online = 0,
-                total_daily = 0,
-            	total_worker = Object.keys(obj).length;
+                total_daily = 0;
+            total_worker = Object.keys(obj).length;
             for (var id in obj) {
-                var wname   = "Unknown", 
-                	wcoin   = "Unknown", 
-                	wspeed  = "N/A", 
-                	wunit   = "MH", 
-                	wuptime = "N/A", 
-                	wdaily  = 0;
+                var wname, wcoin, wspeed, wunit, wuptime, wdaily;
                 // Worker JSON
                 wname = id;
                 wstatus = obj[wname]["info"]["status"];
@@ -166,9 +161,6 @@ function workersRefresh() {
                 wspeed = obj[wname]["mining"]["hashrate"]["hashrate"];
                 wunit = obj[wname]["mining"]["hashrate"]["hashrate_unit"];
                 wuptime = obj[wname]["info"]["uptime"];
-                if (!wuptime) {
-                	wuptime = "N/A";
-                }
                 wdaily = obj[wname]["revenue"]["usd_day"];
                 if (wstatus === "online") {
                     total_online++;
