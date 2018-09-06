@@ -117,7 +117,7 @@ header #icons [data-tooltip]:after{bottom:auto;top:150%;margin-top:-4px;border-t
 .row .col_1_3:first-child{margin:0 7.5px 0 0;}
 .row .col_1_3:last-child{margin:0 0 0 7.5px;}
 .row .col_1_3.box{padding:10px 10px;display:flex;flex-direction:row;justify-content:flex-start;align-items:center;}
-.row .col_1_3.box .icon{width:50px;height:50px;background:url("../images/sprite_stats.svg");background-size:150px 50px;margin-right:15px;}
+.row .col_1_3.box .icon{flex:none;width:50px;height:50px;background:url("../images/sprite_stats.svg");background-size:150px 50px;margin-right:15px;}
 .row .col_1_3.box .icon.earnings{background-position:0px 0px;}
 .row .col_1_3.box .icon.workers{background-position:-50px 0px;}
 .row .col_1_3.box .icon.active{background-position:-100px 0px;}
