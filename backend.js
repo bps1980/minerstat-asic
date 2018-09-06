@@ -73,7 +73,7 @@ const ASIC_DEVICE = {
         "http_auth": true,
         "http_auth_type": "base64",
         "config_supported": false,
-	"config_location": "/tmp"
+		"config_location": "/tmp"
     }
 };
 /*
@@ -222,7 +222,7 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 // Background Process
 async function backgroundProcess(total_worker) {
 	if (maxThread >= totalSYNCWorker || maxThread == 0) {
-    	maxThread = 4; // worker at once
+    	maxThread = 6; // worker at once
     	var startThread = 0;
     }
     function bgListener() {
@@ -339,7 +339,16 @@ async function fetchTCP(worker, workerIP, workerType) {
 // SSH API & CONTROL
 async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, isCallback, forceConfig, remoteCMD) {
     console.log("[%s] Fetching SSH => %s {%s}", getDateTime(), worker, workerIP);
-    var ssh2 = new node_ssh();
+    var ssh2 = new node_ssh(),
+    sshFolder = "/tmp";
+    
+    // Protection in case config_location missing
+    try {
+    	sshFolder = ASIC_DEVICE[workerType].config_location;
+    } catch (err) {
+    	sshFolder = "/tmp";
+    }
+    
     if (remoteCMD) {
     	setTimeout(function() {
             apiCallback(worker, "ssh", "skip sync due remote command");
@@ -352,7 +361,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
         readyTimeout: 30 * 1000
     }).then(function() {
         ssh2.execCommand(sshCommand, {
-            cwd: ASIC_DEVICE[workerType].config_location
+            cwd: sshFolder
         }).then(function(result) {
             response = result.stdout;
             response = response.trim();
