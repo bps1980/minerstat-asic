@@ -72,7 +72,8 @@ const ASIC_DEVICE = {
         "http_url": "/api/summary",
         "http_auth": true,
         "http_auth_type": "base64",
-        "config_supported": false
+        "config_supported": false,
+	"config_location": "/tmp"
     }
 };
 /*
