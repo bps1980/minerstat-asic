@@ -186,5 +186,5 @@ header #icons [data-tooltip]:after{bottom:auto;top:150%;margin-top:-4px;border-t
 .empty .row .icon.close:hover{background-position:-20px -80px;opacity:1;}
 .empty .row .icon.minimize{background-position:0px -100px;}
 .empty .row .icon.minimize:hover{background-position:-20px -100px;opacity:1;}
-.empty .row [data-tooltip]:before{bottom:auto;top:150%;}
-.empty .row [data-tooltip]:after{bottom:auto;top:150%;margin-top:-4px;border-top:0;border-bottom:5px solid #000;border-bottom:5px solid rgba(80, 82, 103, 0.9);border-right:5px solid transparent;border-left:5px solid transparent;}
+.empty .row [data-tooltip]:before{bottom:auto;top:130%;padding:5px 8px 3px 8px;}
+.empty .row [data-tooltip]:after{bottom:auto;top:130%;margin-top:-4px;border-top:0;border-bottom:5px solid #000;border-bottom:5px solid rgba(80, 82, 103, 0.9);border-right:5px solid transparent;border-left:5px solid transparent;}
