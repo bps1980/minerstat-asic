@@ -14,23 +14,24 @@ var colors = require('colors'),
     await = require('await'),
     needle = require('needle'),
     async = require('neo-async'),
-        fullpath = app.getPath("appData"),
-        stringify = require('json-stable-stringify'),
-        net = require('net'),
-        pid = false,
-        workerObject = {},
-        taskObject = [],
-        globalToken = "",
-        globalGroup = "",
-        syncSUMNum = 0,
-        syncSSHNum = 0,
-        dummySSHNUM = 0,
-        syncTCPNum = 0,
-        syncHTTPNum = 0,
-        doneSSHNum = 0,
-        doneTCPNum = 0,
-        doneHTTPNum = 0,
-        totalSYNCWorker = 0;
+    fullpath = app.getPath("appData"),
+    stringify = require('json-stable-stringify'),
+    net = require('net'),
+    pid = false,
+    workerObject = {},
+    taskObject = [],
+    globalToken = "",
+    globalGroup = "",
+    syncSUMNum = 0,
+    syncSSHNum = 0,
+    dummySSHNUM = 0,
+    syncTCPNum = 0,
+    syncHTTPNum = 0,
+    doneSSHNum = 0,
+    doneTCPNum = 0,
+    doneHTTPNum = 0,
+    totalSYNCWorker = 0;
+    
 const GLOBAL = {
     "api_endpoint": "https://api.minerstat.com/v2",
     "api_main": "worker.php?token={TOKEN}&group={GROUP}&filter=asic&node=1",
@@ -240,7 +241,6 @@ async function backgroundProcess(total_worker) {
                 taskObject.splice(0, 1);
                 workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig);
             }
-            //console.log(dummySSHNum + "" + doneSSHNum);
             if (dummySSHNum === doneSSHNum && doneSSHNum != 0) {
                 maxThread++;
             }
