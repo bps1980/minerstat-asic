@@ -35,12 +35,12 @@ process.on('unhandledRejection', (reason, promise) => {
 function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        width: 1024,
-        height: 768,
-        maxWidth: 1024,
-        maxHeight: 768,
-        minWidth: 1024,
-        minHeight: 768,
+        width: 640,
+        height: 480,
+        maxWidth: 640,
+        maxHeight: 480,
+        minWidth: 640,
+        minHeight: 480,
         frame: false,
         "fullscreen": false,
         "kiosk": false,
