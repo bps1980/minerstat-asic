@@ -14,24 +14,23 @@ var colors = require('colors'),
     await = require('await'),
     needle = require('needle'),
     async = require('neo-async'),
-    fullpath = app.getPath("appData"),
-    stringify = require('json-stable-stringify'),
-    net = require('net'),
-    pid = false,
-    workerObject = {},
-    taskObject = [],
-    globalToken = "",
-    globalGroup = "",
-    syncSUMNum = 0,
-    syncSSHNum = 0,
-    dummySSHNUM = 0,
-    syncTCPNum = 0,
-    syncHTTPNum = 0,
-    doneSSHNum = 0,
-    doneTCPNum = 0,
-    doneHTTPNum = 0,
-    totalSYNCWorker = 0;
-
+        fullpath = app.getPath("appData"),
+        stringify = require('json-stable-stringify'),
+        net = require('net'),
+        pid = false,
+        workerObject = {},
+        taskObject = [],
+        globalToken = "",
+        globalGroup = "",
+        syncSUMNum = 0,
+        syncSSHNum = 0,
+        dummySSHNUM = 0,
+        syncTCPNum = 0,
+        syncHTTPNum = 0,
+        doneSSHNum = 0,
+        doneTCPNum = 0,
+        doneHTTPNum = 0,
+        totalSYNCWorker = 0;
 const GLOBAL = {
     "api_endpoint": "https://api.minerstat.com/v2",
     "api_main": "worker.php?token={TOKEN}&group={GROUP}&filter=asic&node=1",
@@ -73,7 +72,7 @@ const ASIC_DEVICE = {
         "http_auth": true,
         "http_auth_type": "base64",
         "config_supported": false,
-		"config_location": "/tmp"
+        "config_location": "/tmp"
     }
 };
 /*
@@ -157,7 +156,7 @@ function listWorkers(login_token, login_group) {
                 var workerObject = {},
                     obj = JSON.parse(json_string),
                     total_worker = Object.keys(obj).length,
-                	current_worker = 0;
+                    current_worker = 0;
                 // FRONTEND
                 jetpack.write(fullpath + '/api.json', json_string);
                 updateStatus(true, "Sync in progress..");
@@ -165,7 +164,7 @@ function listWorkers(login_token, login_group) {
                 workerObject["list"] = [];
                 taskObject = [];
                 for (var id in obj) {
-                	current_worker ++;
+                    current_worker++;
                     var worker = id;
                     var accesskey = obj[worker].info.token,
                         ip_address = obj[worker].info.os.localip,
@@ -174,14 +173,14 @@ function listWorkers(login_token, login_group) {
                         passw = obj[worker].info.auth.pass,
                         remotecommand = obj[worker].info.cmd,
                         isconfig = obj[worker].info.config;
-                        syncSUMNum = 0;
-        				syncSSHNum = 0;
-        				dummySSHNum = 0;
-        				syncTCPNum = 0;
-        				syncHTTPNum = 0;
-        				doneSSHNum = 0;
-        				doneTCPNum = 0;
-        				doneHTTPNum = 0;
+                    syncSUMNum = 0;
+                    syncSSHNum = 0;
+                    dummySSHNum = 0;
+                    syncTCPNum = 0;
+                    syncHTTPNum = 0;
+                    doneSSHNum = 0;
+                    doneTCPNum = 0;
+                    doneHTTPNum = 0;
                     // SEND FOR ASYNC PROCESSING
                     workerPreProcess(accesskey, worker, ip_address, type, login, passw, remotecommand, isconfig, current_worker, total_worker);
                 }
@@ -215,20 +214,21 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
     doneSSHNum = 0;
     maxThread = 0;
     if (current_worker === total_worker) {
-    	totalSYNCWorker = total_worker;
-    	backgroundProcess(total_worker);
+        totalSYNCWorker = total_worker;
+        backgroundProcess(total_worker);
     }
 }
 // Background Process
 async function backgroundProcess(total_worker) {
-	if (maxThread >= totalSYNCWorker || maxThread == 0) {
-    	maxThread = 6; // worker at once
-    	var startThread = 0;
+    if (maxThread >= totalSYNCWorker || maxThread == 0) {
+        maxThread = 6; // worker at once
+        var startThread = 0;
     }
+
     function bgListener() {
-        if (Object.keys(taskObject).length > 0) {        	
+        if (Object.keys(taskObject).length > 0) {
             if (startThread < maxThread && maxThread != 0) {
-            	startThread ++;
+                startThread++;
                 var token = taskObject[0]["token"],
                     worker = taskObject[0]["worker"],
                     workerIP = taskObject[0]["workerIP"],
@@ -241,8 +241,8 @@ async function backgroundProcess(total_worker) {
                 workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig);
             }
             //console.log(dummySSHNum + "" + doneSSHNum);
-            if (dummySSHNum === doneSSHNum && doneSSHNum != 0)  {
-            	 maxThread ++;
+            if (dummySSHNum === doneSSHNum && doneSSHNum != 0) {
+                maxThread++;
             }
         } else {
             clearInterval(bgListener);
@@ -340,17 +340,15 @@ async function fetchTCP(worker, workerIP, workerType) {
 async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, isCallback, forceConfig, remoteCMD) {
     console.log("[%s] Fetching SSH => %s {%s}", getDateTime(), worker, workerIP);
     var ssh2 = new node_ssh(),
-    sshFolder = "/tmp";
-    
+        sshFolder = "/tmp";
     // Protection in case config_location missing
     try {
-    	sshFolder = ASIC_DEVICE[workerType].config_location;
+        sshFolder = ASIC_DEVICE[workerType].config_location;
     } catch (err) {
-    	sshFolder = "/tmp";
+        sshFolder = "/tmp";
     }
-    
     if (remoteCMD) {
-    	setTimeout(function() {
+        setTimeout(function() {
             apiCallback(worker, "ssh", "skip sync due remote command");
         }, 30 * 1000);
     }
@@ -369,7 +367,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
                 apiCallback(worker, "ssh", response);
             }
             if (forceConfig == true && isConfig == false) {
-            console.log(colors.yellow("[%s] Config => %s {%s} - Upload config to 'Config Editor'"), getDateTime(), worker, workerIP);
+                console.log(colors.yellow("[%s] Config => %s {%s} - Upload config to 'Config Editor'"), getDateTime(), worker, workerIP);
                 var headers = {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -391,8 +389,8 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
                         apiCallback(worker, "ssh", "config edit done");
                         console.log(colors.green("[%s] Config => %s {%s} - Done"), getDateTime(), worker, workerIP);
                     } else {
-                    	apiCallback(worker, "ssh", "config edit server error");
-                    	console.log(colors.red("[%s] Error => %s {%s} - %s"), getDateTime(), worker, workerIP, error);
+                        apiCallback(worker, "ssh", "config edit server error");
+                        console.log(colors.red("[%s] Error => %s {%s} - %s"), getDateTime(), worker, workerIP, error);
                     }
                 })
             }
@@ -403,7 +401,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
                 apiCallback(worker, "ssh", "bad password");
             }
             if (forceConfig == true && isConfig == false) {
-            	apiCallback(worker, "ssh", "config edit error bad password");
+                apiCallback(worker, "ssh", "config edit error bad password");
                 console.log(colors.red("[%s] Error => %s {%s} - Config update failed due bad ssh password"), getDateTime(), worker, workerIP);
             }
         });
@@ -414,7 +412,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
             apiCallback(worker, "ssh", "timeout");
         }
         if (forceConfig == true && isConfig == false) {
-        	apiCallback(worker, "ssh", "config edit timeout");
+            apiCallback(worker, "ssh", "config edit timeout");
             console.log(colors.red("[%s] Error => %s {%s} - Config update failed due Timeout"), getDateTime(), worker, workerIP);
         }
     });
@@ -473,7 +471,6 @@ async function apiCallback(worker, callbackType, workerData) {
     syncPercent = ((syncDoneVal) / (syncTotalVal) * 100);
     // DISPLAY PROGRESS, if done push to the server
     console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
-    
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, ''),
