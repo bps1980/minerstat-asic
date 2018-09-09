@@ -282,7 +282,7 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
         var forceConfig = false;
         // CHECK CONFIG EDITOR IS EMPY OR NOT
         // IF EMPTY FIRST PUSH ACTUAL CONFIG TO THE SERVER
-        if (isConfig == false && ASIC_DEVICE[workerType].config_supported == true) {
+		if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
             sshCommand = ASIC_DEVICE[workerType].config_fetch;
             forceConfig = true;
         } else {
@@ -363,10 +363,10 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
         }).then(function(result) {
             response = result.stdout;
             response = response.trim();
-            if (isCallback == true && forceConfig == false && !remoteCMD) {
+            if (isCallback.toString() == "true" && forceConfig.toString() == "false" && !remoteCMD) {
                 apiCallback(worker, "ssh", response);
             }
-            if (forceConfig == true && isConfig == false) {
+            if (forceConfig.toString() == "true" && isConfig.toString() == "false") {
                 console.log(colors.yellow("[%s] Config => %s {%s} - Upload config to 'Config Editor'"), getDateTime(), worker, workerIP);
                 var headers = {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0',
