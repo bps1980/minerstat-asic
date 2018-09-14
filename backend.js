@@ -14,24 +14,24 @@ var colors = require('colors'),
     await = require('await'),
     needle = require('needle'),
     async = require('neo-async'),
-    fullpath = app.getPath("appData"),
-    stringify = require('json-stable-stringify'),
-    net = require('net'),
-    pid = false,
-    workerObject = {},
-    taskObject = [],
-    globalToken = "",
-    globalGroup = "",
-    syncSUMNum = 0,
-    syncSSHNum = 0,
-    dummySSHNUM = 0,
-    syncTCPNum = 0,
-    syncHTTPNum = 0,
-    doneSSHNum = 0,
-    doneTCPNum = 0,
-    doneHTTPNum = 0,
-    totalSYNCWorker = 0;
-    
+        fullpath = app.getPath("appData"),
+        stringify = require('json-stable-stringify'),
+        net = require('net'),
+        pid = false,
+        workerObject = {},
+        taskObject = [],
+        globalToken = "",
+        globalGroup = "",
+        syncSUMNum = 0,
+        syncSSHNum = 0,
+        dummySSHNUM = 0,
+        syncTCPNum = 0,
+        syncHTTPNum = 0,
+        doneSSHNum = 0,
+        doneTCPNum = 0,
+        doneHTTPNum = 0,
+        totalSYNCWorker = 0;
+
 const GLOBAL = {
     "api_endpoint": "https://api.minerstat.com/v2",
     "api_main": "worker.php?token={TOKEN}&group={GROUP}&filter=asic&node=1",
@@ -223,8 +223,11 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
         maxThread = 6; // worker at once
-        if (total_worker => 50) {
-        	maxThread = 50;
+        if (total_worker => 50) {
+            maxThread = Math.round(total_worker / 2);
+        }
+        if (maxThread >= 200) {
+        	maxThread = 200;
         }
         console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
@@ -246,13 +249,15 @@ async function backgroundProcess(total_worker) {
                 workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig);
             }
             if (dummySSHNum === doneSSHNum && doneSSHNum != 0) {
-                maxThread++;
+            	if (startThread == maxThread) {
+                	maxThread = maxThread + maxThread;
+                }
             }
         } else {
             clearInterval(bgListener);
         }
     }
-    setInterval(bgListener, 1 * 400);
+    setInterval(bgListener, 1 * 100);
 }
 // Remote Command Processing
 function convertCommand(remoteCMD, token, worker, workerType) {
@@ -286,7 +291,7 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
         var forceConfig = false;
         // CHECK CONFIG EDITOR IS EMPY OR NOT
         // IF EMPTY FIRST PUSH ACTUAL CONFIG TO THE SERVER
-		if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
+        if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
             sshCommand = ASIC_DEVICE[workerType].config_fetch;
             forceConfig = true;
         } else {
@@ -473,10 +478,11 @@ async function apiCallback(worker, callbackType, workerData) {
     var syncTotalVal = syncSSHNum + syncTCPNum + syncHTTPNum;
     syncDoneVal = doneSSHNum + doneTCPNum + doneHTTPNum;
     syncPercent = ((syncDoneVal) / (syncTotalVal) * 100);
+    var tempPercent = syncPercent;
     // DISPLAY PROGRESS, if done push to the server
-    console.log("[%s] Progress {%s%} => Total: %s/%s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, totalSYNCWorker, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
-    if (parseInt(syncPercent) === 100) {
-    var tempSYNCWorker = totalSYNCWorker;
+    console.log("[%s] Progress {%s%} => Total: %s/%s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(tempPercent), syncSUMNum, totalSYNCWorker, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
+    if (parseInt(tempPercent) === 100) {
+        var tempSYNCWorker = totalSYNCWorker;
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, ''),
             client = new net.Socket();
@@ -486,25 +492,24 @@ async function apiCallback(worker, callbackType, workerData) {
             client.write(jsons);
             // CLOSE CONNECTION AFTER INACTIVITY
             setTimeout(function() {
-            	client.destroy(); // kill client after server's response
-           	}, 30 * 1000);
+                client.destroy(); // kill client after server's response
+            }, 30 * 1000);
         });
         client.on('data', function(data) {
             console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
-            // Show this only on 100!
-            if (tempSYNCWorker == syncSUMNum) {
-            	console.log("");
-            	console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-            	console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
-            	console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-            	console.log("");
-           		setTimeout(function() {
-            		restartNode();
-        		}, 35 * 1000);
-            }
         });
+    }
+
+    if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         updateStatus(true, "Waiting for the next sync round.");
-        // Start New Round after 35 + 5 (40) sec idle
+        console.log("");
+        console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
+        console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
+        console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
+        console.log("");
+        setTimeout(function() {
+            restartNode();
+        }, 35 * 1000);
     }
 }
 /*
