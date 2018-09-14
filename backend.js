@@ -229,12 +229,12 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 // Background Process
 async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
-        maxThread = 50; // worker at once
-        if (total_worker >= 50) {
+        maxThread = 15; // worker at once
+        if (total_worker >= 30) {
             maxThread = Math.round(total_worker / 2);
         }
-        if (maxThread > 300) {
-            maxThread = 300;
+        if (maxThread > 30) {
+            maxThread = 30;
         }
         console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
@@ -507,7 +507,7 @@ async function apiCallback(worker, callbackType, workerData) {
                 });
                 shell.on('message', function incoming(data) {
                     if (data.toString()) {
-                        console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
+                        console.log("[%s] SYNC =>  %s", getDateTime(), data);
                         console.log("");
                         console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
                         console.log(colors.cyan("[%s] DONE => Waiting for the next sync round."), getDateTime());
@@ -517,10 +517,12 @@ async function apiCallback(worker, callbackType, workerData) {
                         // Start New Round after 35 + 5 (40) sec idle
                         setTimeout(function() {
                             restartNode();
+                            shell.close();
                         }, 35 * 1000);
                     }
                 });
                 shell.on('error', () => restartNode("SYNC Server is not reachable."));
+                shell.on('close', () => console.log("[%s] INFO => Disconnected from the sync server", getDateTime()));
             }
         });
     }
