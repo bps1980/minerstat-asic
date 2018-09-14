@@ -14,10 +14,11 @@ var colors = require('colors'),
     await = require('await'),
     needle = require('needle'),
     async = require('neo-async'),
-    fullpath = app.getPath("appData"),
-    stringify = require('json-stable-stringify'),
-    net = require('net'),
-    pid = false,
+        fullpath = app.getPath("appData"),
+        stringify = require('json-stable-stringify'),
+        net = require('net'),
+        zlib = require('zlib');
+pid = false,
     workerObject = {},
     taskObject = [],
     globalToken = "",
@@ -30,14 +31,17 @@ var colors = require('colors'),
     doneSSHNum = 0,
     doneTCPNum = 0,
     doneHTTPNum = 0,
-    totalSYNCWorker = 0;
-    
+    totalSYNCWorker = 0,
+    maxThread = 6;
+
 const GLOBAL = {
     "api_endpoint": "https://api.minerstat.com/v2",
     "api_main": "worker.php?token={TOKEN}&group={GROUP}&filter=asic&node=1",
     "api_config": "set_asic_config.php",
-    "sync_server": "static.minerstat.farm",
-    "sync_port": 1337,
+    "sync_protocol": "wss",
+    "sync_server": "minerstat.com",
+    "sync_port": 2096,
+    "sync_endpoint": "asic",
     "ssh_folder": "/tmp",
     "ssh_reboot": "/sbin/reboot -f",
     "ssh_shutdown": "/sbin/shutdown -h now"
@@ -90,7 +94,10 @@ function getDateTime() {
     return hour + ":" + min + ":" + sec;
 }
 // RESTART NODE
-function restartNode() {
+function restartNode(reason) {
+	if (reason) {
+    	console.log("[%s] ERROR => %s", getDateTime(), reason);
+    }
     setTimeout(function() {
         pid = false;
     }, 5 * 1000);
@@ -222,7 +229,14 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 // Background Process
 async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
-        maxThread = 100; // worker at once
+        maxThread = 50; // worker at once
+        if (total_worker >= 50) {
+            maxThread = Math.round(total_worker / 2);
+        }
+        if (maxThread > 300) {
+            maxThread = 300;
+        }
+        console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
     }
 
@@ -242,7 +256,9 @@ async function backgroundProcess(total_worker) {
                 workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig);
             }
             if (dummySSHNum === doneSSHNum && doneSSHNum != 0) {
-                maxThread++;
+                if (maxThread == startThread) {
+                    maxThread = maxThread + maxThread;
+                }
             }
         } else {
             clearInterval(bgListener);
@@ -282,7 +298,7 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
         var forceConfig = false;
         // CHECK CONFIG EDITOR IS EMPY OR NOT
         // IF EMPTY FIRST PUSH ACTUAL CONFIG TO THE SERVER
-		if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
+        if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
             sshCommand = ASIC_DEVICE[workerType].config_fetch;
             forceConfig = true;
         } else {
@@ -475,29 +491,41 @@ async function apiCallback(worker, callbackType, workerData) {
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, ''),
             client = new net.Socket();
-        client.connect(GLOBAL["sync_port"], GLOBAL["sync_server"], function() {
-            console.log("[%s] Connected to sync server", getDateTime());
-            client.write(jsons);
+        const WebSocket = require('ws'),
+            shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
+
+        var deflatedJson = new Buffer(jsons, 'utf8');
+        zlib.deflate(deflatedJson, function(err, buf) {
+            if (err) {
+                console.log("[%s] ERROR => %s", getDateTime(), err.toString());
+            } else {
+                shell.on('open', function open() {
+                    console.log("[%s] SYNC => Connected to sync server", getDateTime());
+                    console.log("[%s] SYNC => Sending %s kbyte of data", getDateTime(), Math.round(Buffer.byteLength(deflatedJson, 'utf8')) / 1000);
+                    shell.send(buf);
+                    //console.log(buf);
+                });
+                shell.on('message', function incoming(data) {
+                    if (data.toString()) {
+                        console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
+                        console.log("");
+                        console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
+                        console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
+                        console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
+                        console.log("");
+                        updateStatus(true, "DONE => Waiting for the next sync round.");
+                        // Start New Round after 35 + 5 (40) sec idle
+                        setTimeout(function() {
+                            restartNode();
+                        }, 35 * 1000);
+                    }
+                });
+                shell.on('error', () => restartNode("SYNC Server is not reachable."));
+            }
         });
-        client.on('data', function(data) {
-            console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
-            console.log("");
-            console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-            console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
-            console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-            console.log("");
-            // keep connection for at least 8 seconds.
-            setTimeout(function() {
-                client.destroy(); // kill client after server's response
-            }, 30 * 1000);
-        });
-        updateStatus(true, "Waiting for the next sync round.");
-        // Start New Round after 35 + 5 (40) sec idle
-        setTimeout(function() {
-            restartNode();
-        }, 35 * 1000);
     }
 }
+
 /*
 	CORE
 */
