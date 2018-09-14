@@ -224,10 +224,10 @@ async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
         maxThread = 6; // worker at once
         if (total_worker > 50) {
-        	maxThread = Math.round(total_worker / 2);
+        	maxThread = Math.round(total_worker / 2.5);
         }
-        if (maxThread > 400) {
-        	maxThread = 400;
+        if (maxThread > 300) {
+        	maxThread = 300;
         }
         console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
@@ -487,6 +487,10 @@ async function apiCallback(worker, callbackType, workerData) {
             console.log("[%s] Connected to sync server", getDateTime());
             console.log("[%s] Sending %s kbyte of data", getDateTime(), Buffer.byteLength(jsons, 'utf8') / 1000)
             client.write(jsons);
+            // CLOSE CONNECTION AFTER INACTIVITY
+            setTimeout(function() {
+            	client.destroy(); // kill client after server's response
+           	}, 30 * 1000);
         });
         client.on('data', function(data) {
             console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
@@ -497,18 +501,13 @@ async function apiCallback(worker, callbackType, workerData) {
             	console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
             	console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
             	console.log("");
-            	setTimeout(function() {
-                	client.destroy(); // kill client after server's response
-           		}, 30 * 1000);
+           		setTimeout(function() {
+            		restartNode();
+        		}, 35 * 1000);
             }
         });
         updateStatus(true, "Waiting for the next sync round.");
         // Start New Round after 35 + 5 (40) sec idle
-        if (tempSYNCWorker == syncSUMNum) {
-        	setTimeout(function() {
-            	restartNode();
-        	}, 35 * 1000);
-        }
     }
 }
 /*
