@@ -510,10 +510,10 @@ async function apiCallback(worker, callbackType, workerData) {
                         console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
                         console.log("");
                         console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-                        console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
+                        console.log(colors.cyan("[%s] DONE => Waiting for the next sync round."), getDateTime());
                         console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
                         console.log("");
-                        updateStatus(true, "DONE => Waiting for the next sync round.");
+                        updateStatus(true, "Waiting for the next sync round.");
                         // Start New Round after 35 + 5 (40) sec idle
                         setTimeout(function() {
                             restartNode();
