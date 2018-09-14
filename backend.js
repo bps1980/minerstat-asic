@@ -224,11 +224,12 @@ async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
         maxThread = 6; // worker at once
         if (total_worker > 50) {
-        	maxThread = total_worker / 2;
+        	maxThread = Math.round(total_worker / 2);
         }
         if (maxThread > 400) {
         	maxThread = 400;
         }
+        console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
     }
 
