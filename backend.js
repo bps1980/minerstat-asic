@@ -223,11 +223,8 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
         maxThread = 6; // worker at once
-        if (total_worker > 50) {
-        	maxThread = Math.round(total_worker / 2.5);
-        }
-        if (maxThread > 300) {
-        	maxThread = 300;
+        if (total_worker => 50) {
+        	maxThread = 50;
         }
         console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
@@ -255,7 +252,7 @@ async function backgroundProcess(total_worker) {
             clearInterval(bgListener);
         }
     }
-    setInterval(bgListener, 1 * 1000);
+    setInterval(bgListener, 1 * 400);
 }
 // Remote Command Processing
 function convertCommand(remoteCMD, token, worker, workerType) {
