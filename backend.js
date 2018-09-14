@@ -223,6 +223,12 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 async function backgroundProcess(total_worker) {
     if (maxThread >= totalSYNCWorker || maxThread == 0) {
         maxThread = 6; // worker at once
+        if (total_worker > 50) {
+        	maxThread = total_worker / 2;
+        }
+        if (maxThread > 400) {
+        	maxThread = 400;
+        }
         var startThread = 0;
     }
 
@@ -248,7 +254,7 @@ async function backgroundProcess(total_worker) {
             clearInterval(bgListener);
         }
     }
-    setInterval(bgListener, 1 * 100);
+    setInterval(bgListener, 1 * 1000);
 }
 // Remote Command Processing
 function convertCommand(remoteCMD, token, worker, workerType) {
@@ -470,32 +476,38 @@ async function apiCallback(worker, callbackType, workerData) {
     syncDoneVal = doneSSHNum + doneTCPNum + doneHTTPNum;
     syncPercent = ((syncDoneVal) / (syncTotalVal) * 100);
     // DISPLAY PROGRESS, if done push to the server
-    console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
-    if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
+    console.log("[%s] Progress {%s%} => Total: %s/%s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, totalSYNCWorker, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
+    if (parseInt(syncPercent) === 100) {
+    var tempSYNCWorker = totalSYNCWorker;
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, ''),
             client = new net.Socket();
         client.connect(GLOBAL["sync_port"], GLOBAL["sync_server"], function() {
             console.log("[%s] Connected to sync server", getDateTime());
+            console.log("[%s] Sending %s kbyte of data", getDateTime(), Buffer.byteLength(jsons, 'utf8') / 1000)
             client.write(jsons);
         });
         client.on('data', function(data) {
             console.log("[%s] SYNC ID =>  %s", getDateTime(), data);
-            console.log("");
-            console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-            console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
-            console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
-            console.log("");
-            // keep connection for at least 8 seconds.
-            setTimeout(function() {
-                client.destroy(); // kill client after server's response
-            }, 30 * 1000);
+            // Show this only on 100!
+            if (tempSYNCWorker == syncSUMNum) {
+            	console.log("");
+            	console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
+            	console.log(colors.cyan("[%s] Waiting for the next sync round."), getDateTime());
+            	console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
+            	console.log("");
+            	setTimeout(function() {
+                	client.destroy(); // kill client after server's response
+           		}, 30 * 1000);
+            }
         });
         updateStatus(true, "Waiting for the next sync round.");
         // Start New Round after 35 + 5 (40) sec idle
-        setTimeout(function() {
-            restartNode();
-        }, 35 * 1000);
+        if (tempSYNCWorker == syncSUMNum) {
+        	setTimeout(function() {
+            	restartNode();
+        	}, 35 * 1000);
+        }
     }
 }
 /*
