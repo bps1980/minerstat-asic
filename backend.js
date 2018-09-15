@@ -6,6 +6,7 @@ const path = require('path'),
     nets = require('net'),
     jetpack = require('fs-jetpack'),
     electron = require('electron'),
+    WebSocket = require('ws'),
     app = electron.app;
 var colors = require('colors'),
     fs = require('fs'),
@@ -33,6 +34,7 @@ var colors = require('colors'),
     doneHTTPNum = 0,
     totalSYNCWorker = 0,
     maxThread = 6;
+    client = new net.Socket();
 
 const GLOBAL = {
     "api_endpoint": "https://api.minerstat.com/v2",
@@ -535,10 +537,8 @@ async function apiCallback(worker, callbackType, workerData) {
     console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
-        var jsons = stringify(workerObject).replace(/\\/g, ''),
-            client = new net.Socket();
-        const WebSocket = require('ws'),
-            shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
+        var jsons = stringify(workerObject).replace(/\\/g, '');
+        const shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
 
         var deflatedJson = new Buffer(jsons, 'utf8');
         zlib.deflate(deflatedJson, function(err, buf) {
