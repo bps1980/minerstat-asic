@@ -21,6 +21,9 @@ const path = require('path'),
     electron = require('electron'),
     WebSocket = require('ws'),
     app = electron.app;
+	login_token = "",
+    login_group = "",
+    shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
 var colors = require('colors'),
     fs = require('fs'),
     node_ssh = require('node-ssh'),
@@ -32,7 +35,7 @@ var colors = require('colors'),
     net = require('net'),
     zlib = require('zlib'),
     fullpath = app.getPath("appData"),
-	pid = false,
+    pid = false,
     workerObject = {},
     taskObject = [],
     globalToken = "",
@@ -47,9 +50,8 @@ var colors = require('colors'),
     doneHTTPNum = 0,
     totalSYNCWorker = 0,
     maxThread = 6;
-    client = new net.Socket(),
-    shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
-
+	client = new net.Socket();
+	
 const ASIC_DEVICE = {
     "antminer": {
         "tcp": true,
@@ -89,14 +91,21 @@ const ASIC_DEVICE = {
 	Websocket
 */
 function newSocket(msg) {
-	if (msg == "close") {
-		console.log("[%s] INFO => Disconnected from the sync server", getDateTime());
-	}
-	shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
+    if (msg == "close") {
+        console.log("[%s] INFO => Disconnected from the sync server", getDateTime());
+        // If theres any connection outage during sync, protect from hang
+        var syncTotalVal = syncSSHNum + syncTCPNum + syncHTTPNum;
+    	syncDoneVal = doneSSHNum + doneTCPNum + doneHTTPNum;
+        if (((syncDoneVal) / (syncTotalVal) * 100) == 100) {
+        	console.log("[%s] ERROR => Unfinished sync detected. Restarting..", getDateTime());
+        	restartNode();
+        }
+    }
+    shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
 }
 
 shell.on('open', function open() {
-	console.log("[%s] NODE => Connected to sync server", getDateTime());
+    console.log("[%s] NODE => Connected to sync server", getDateTime());
 });
 
 /*
@@ -124,14 +133,20 @@ function restartNode(reason) {
 }
 // UPDATE USER INTERFACE
 function updateStatus(connection, status) {
-    var o = {} // empty Object
-    o["status"] = [];
-    var data = {
-        internet: connection,
-        status: status
-    };
-    o["status"].push(data);
-    jetpack.write(fullpath + '/user.json', JSON.stringify(o));
+    if (!process.argv.includes("console") && !process.argv.includes("logout")) {
+        try {
+            var o = {} // empty Object
+            o["status"] = [];
+            var data = {
+                internet: connection,
+                status: status
+            };
+            o["status"].push(data);
+            jetpack.write(fullpath + '/user.json', JSON.stringify(o));
+        } catch (exception) {
+            console.log("[%s] ERROR => %s", getDateTime(), exception);
+        }
+    }
 }
 // VALIDATE INTERNET CONNECTION
 function checkConnection() {
@@ -151,7 +166,7 @@ function checkConnection() {
 }
 // GET LOGIN INFORMATION
 function checkLogin() {
-    if (!fs.existsSync(fullpath + "/login.json")) {
+    if (!fs.existsSync(fullpath + "/login.json") && !login_token) {
         console.log("[%s] Round skipped, no user details.", getDateTime());
         if (process.argv.includes("console") || process.argv.includes("logout")) {
             const readline = require('readline');
@@ -180,12 +195,12 @@ function checkLogin() {
                     console.log("To remove login details (re)start with ./minerstat logout");
                     var o = {} // empty Object
                     o["login"] = [];
-                    var wlogin = loginTokenSet, 
-                    	wgroup = loginGroupSet,
-                    	data = {
-                        token: wlogin,
-                        group: wgroup
-                    };
+                    var wlogin = loginTokenSet,
+                        wgroup = loginGroupSet,
+                        data = {
+                            token: wlogin,
+                            group: wgroup
+                        };
                     o["login"].push(data);
                     jetpack.write(fullpath + "/login.json", JSON.stringify(o));
                     restartNode();
@@ -198,13 +213,20 @@ function checkLogin() {
             restartNode();
         }
     } else {
-        const data = jetpack.read(fullpath + '/login.json');
-        var json_login = data.toString(),
-            proc = JSON.parse(json_login),
-            login_token = proc["login"][0]["token"],
-            login_group = proc["login"][0]["group"];
-        if (!login_group) {
-        	login_group = "asic";
+        if (!login_token) {
+            try {
+                const data = jetpack.read(fullpath + '/login.json');
+                var json_login = data.toString(),
+                    proc = JSON.parse(json_login);
+                login_token = proc["login"][0]["token"],
+                    login_group = proc["login"][0]["group"];
+                if (!login_group) {
+                    login_group = "asic";
+                }
+            } catch (exception) {
+                console.log("[%s] ERROR => %s", getDateTime(), exception);
+                restartNode();
+            }
         }
         console.log("[%s] TOKEN => %s {GROUP: %s}", getDateTime(), login_token, login_group);
         listWorkers(login_token, login_group);
@@ -232,8 +254,12 @@ function listWorkers(login_token, login_group) {
                     total_worker = Object.keys(obj).length,
                     current_worker = 0;
                 // FRONTEND
-                jetpack.write(fullpath + '/api.json', json_string);
-                updateStatus(true, "Sync in progress..");
+                if (!process.argv.includes("console") && !process.argv.includes("logout")) {
+                	try {
+                	jetpack.write(fullpath + '/api.json', json_string);
+                    updateStatus(true, "Sync in progress..");
+                	} catch (exception) { }
+                }
                 // BACKEND
                 workerObject["list"] = [];
                 taskObject = [];
@@ -299,8 +325,8 @@ async function backgroundProcess(total_worker) {
         if (total_worker >= 30) {
             maxThread = Math.round(total_worker / 2);
         }
-        if (maxThread > 30) {
-            maxThread = 30;
+        if (maxThread > 50) {
+            maxThread = 50;
         }
         console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
         var startThread = 0;
@@ -556,7 +582,7 @@ async function apiCallback(worker, callbackType, workerData) {
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, '');
- 
+
         var deflatedJson = new Buffer(jsons, 'utf8');
         zlib.deflate(deflatedJson, function(err, buf) {
             if (err) {
