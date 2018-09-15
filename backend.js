@@ -14,11 +14,11 @@ var colors = require('colors'),
     await = require('await'),
     needle = require('needle'),
     async = require('neo-async'),
-    fullpath = app.getPath("appData"),
     stringify = require('json-stable-stringify'),
     net = require('net'),
-    zlib = require('zlib');
-pid = false,
+    zlib = require('zlib'),
+    fullpath = app.getPath("appData"),
+	pid = false,
     workerObject = {},
     taskObject = [],
     globalToken = "",
@@ -95,8 +95,8 @@ function getDateTime() {
 }
 // RESTART NODE
 function restartNode(reason) {
-	if (reason) {
-    	console.log("[%s] ERROR => %s", getDateTime(), reason);
+    if (reason) {
+        console.log("[%s] ERROR => %s", getDateTime(), reason);
     }
     setTimeout(function() {
         pid = false;
@@ -133,13 +133,59 @@ function checkConnection() {
 function checkLogin() {
     if (!fs.existsSync(fullpath + "/login.json")) {
         console.log("[%s] Round skipped, no user details.", getDateTime());
-        restartNode();
+        if (process.argv.includes("console") || process.argv.includes("logout")) {
+            const readline = require('readline');
+            const rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+
+            console.log("");
+            console.log("Please, provide your login token below.");
+            console.log("");
+
+            rl.question('Login Token: ', (loginTokenSet) => {
+                console.log("");
+                console.log("If you want to monitor all asic worker => Enter: asic");
+                console.log("If you want to monitor a group of asic => Enter your group name");
+                console.log("");
+                rl.close();
+                const rL = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                rL.question('Group / Location (Default: asic) ', (loginGroupSet) => {
+                    console.log("");
+                    console.log("Thank you !");
+                    console.log("To remove login details (re)start with ./minerstat logout");
+                    var o = {} // empty Object
+                    o["login"] = [];
+                    var wlogin = loginTokenSet, 
+                    	wgroup = loginGroupSet,
+                    	data = {
+                        token: wlogin,
+                        group: wgroup
+                    };
+                    o["login"].push(data);
+                    jetpack.write(fullpath + "/login.json", JSON.stringify(o));
+                    restartNode();
+                    rL.close();
+                });
+            });
+
+
+        } else {
+            restartNode();
+        }
     } else {
         const data = jetpack.read(fullpath + '/login.json');
         var json_login = data.toString(),
             proc = JSON.parse(json_login),
             login_token = proc["login"][0]["token"],
             login_group = proc["login"][0]["group"];
+        if (!login_group) {
+        	login_group = "asic";
+        }
         console.log("[%s] TOKEN => %s {GROUP: %s}", getDateTime(), login_token, login_group);
         listWorkers(login_token, login_group);
     }
