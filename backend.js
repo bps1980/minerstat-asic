@@ -1,6 +1,19 @@
 /*
 	Global Settings
 */
+const GLOBAL = {
+    "api_endpoint": "https://api.minerstat.com/v2",
+    "api_main": "worker.php?token={TOKEN}&group={GROUP}&filter=asic&node=1",
+    "api_config": "set_asic_config.php",
+    "sync_protocol": "wss",
+    "sync_server": "minerstat.com",
+    "sync_port": 2096,
+    "sync_endpoint": "asic",
+    "ssh_folder": "/tmp",
+    "ssh_reboot": "/sbin/reboot -f",
+    "ssh_shutdown": "/sbin/shutdown -h now"
+};
+
 const path = require('path'),
     url = require('url'),
     nets = require('net'),
@@ -34,20 +47,9 @@ var colors = require('colors'),
     doneHTTPNum = 0,
     totalSYNCWorker = 0,
     maxThread = 6;
-    client = new net.Socket();
+    client = new net.Socket(),
+    shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
 
-const GLOBAL = {
-    "api_endpoint": "https://api.minerstat.com/v2",
-    "api_main": "worker.php?token={TOKEN}&group={GROUP}&filter=asic&node=1",
-    "api_config": "set_asic_config.php",
-    "sync_protocol": "wss",
-    "sync_server": "minerstat.com",
-    "sync_port": 2096,
-    "sync_endpoint": "asic",
-    "ssh_folder": "/tmp",
-    "ssh_reboot": "/sbin/reboot -f",
-    "ssh_shutdown": "/sbin/shutdown -h now"
-};
 const ASIC_DEVICE = {
     "antminer": {
         "tcp": true,
@@ -82,6 +84,21 @@ const ASIC_DEVICE = {
         "config_location": "/tmp"
     }
 };
+
+/*
+	Websocket
+*/
+function newSocket(msg) {
+	if (msg == "close") {
+		console.log("[%s] INFO => Disconnected from the sync server", getDateTime());
+	}
+	shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
+}
+
+shell.on('open', function open() {
+	console.log("[%s] NODE => Connected to sync server", getDateTime());
+});
+
 /*
 	Global FUNCTIONS
 */
@@ -98,7 +115,8 @@ function getDateTime() {
 // RESTART NODE
 function restartNode(reason) {
     if (reason) {
-        console.log("[%s] ERROR => %s", getDateTime(), reason);
+        console.log("[%s] ERROR => SYNC Server is not reachable.", getDateTime());
+        newSocket();
     }
     setTimeout(function() {
         pid = false;
@@ -120,13 +138,13 @@ function checkConnection() {
     require('dns').resolve(GLOBAL["sync_server"], function(err) {
         if (err) {
             // Start New Round after 10 sec idle
-            console.log(colors.red("[%s] NODE => Connection problems."), getDateTime());
+            console.log(colors.red("[%s] NODE => Connection problems !"), getDateTime());
             console.log(colors.red("[%s] ERROR => %s"), getDateTime(), err);
             updateStatus(false, "Waiting for connection..");
             restartNode();
         } else {
             pid = true;
-            console.log(colors.green("[%s] NODE => Connected !"), getDateTime());
+            console.log(colors.green("[%s] NODE => Internet available !"), getDateTime());
             checkLogin();
         }
     });
@@ -538,19 +556,14 @@ async function apiCallback(worker, callbackType, workerData) {
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, '');
-        const shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
-
+ 
         var deflatedJson = new Buffer(jsons, 'utf8');
         zlib.deflate(deflatedJson, function(err, buf) {
             if (err) {
                 console.log("[%s] ERROR => %s", getDateTime(), err.toString());
             } else {
-                shell.on('open', function open() {
-                    console.log("[%s] SYNC => Connected to sync server", getDateTime());
-                    console.log("[%s] SYNC => Sending %s kbyte of data", getDateTime(), Math.round(Buffer.byteLength(deflatedJson, 'utf8')) / 1000);
-                    shell.send(buf);
-                    //console.log(buf);
-                });
+                console.log("[%s] SYNC => Sending %s kbyte of data", getDateTime(), Math.round(Buffer.byteLength(deflatedJson, 'utf8')) / 1000);
+                shell.send(buf);
                 shell.on('message', function incoming(data) {
                     if (data.toString()) {
                         console.log("[%s] SYNC =>  %s", getDateTime(), data);
@@ -563,12 +576,12 @@ async function apiCallback(worker, callbackType, workerData) {
                         // Start New Round after 35 + 5 (40) sec idle
                         setTimeout(function() {
                             restartNode();
-                            shell.close();
+                            //shell.close();
                         }, 35 * 1000);
                     }
                 });
-                shell.on('error', () => restartNode("SYNC Server is not reachable."));
-                shell.on('close', () => console.log("[%s] INFO => Disconnected from the sync server", getDateTime()));
+                shell.on('error', () => restartNode("timeout"));
+                shell.on('close', () => newSocket("close"));
             }
         });
     }
