@@ -61,7 +61,7 @@ const ASIC_DEVICE = {
         "ssh_command": "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools; ",
         "config_supported": true,
         "config_fetch": "cat cgminer.conf; cat bmminer.conf;",
-        "config_update": "wget -O config.conf 'http://static.minerstat.farm/proxy.php?token={TOKEN}&worker={WORKER}' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /etc/init.d/cgminer.sh restart; /etc/init.d/bmminer.sh restart;",
+        "config_update": "wget -O config.conf 'http://static.minerstat.farm/proxy.php?token={TOKEN}&worker={WORKER}' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; /sbin/reboot -f",
         "config_location": "/config",
         "http": false
     },
