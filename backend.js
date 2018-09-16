@@ -22,8 +22,7 @@ const path = require('path'),
     WebSocket = require('ws'),
     app = electron.app;
 	login_token = "",
-    login_group = "",
-    shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
+    login_group = "";
 var colors = require('colors'),
     fs = require('fs'),
     node_ssh = require('node-ssh'),
@@ -87,26 +86,6 @@ const ASIC_DEVICE = {
     }
 };
 
-/*
-	Websocket
-*/
-function newSocket(msg) {
-    if (msg == "close") {
-        console.log("[%s] INFO => Disconnected from the sync server", getDateTime());
-        // If theres any connection outage during sync, protect from hang
-        var syncTotalVal = syncSSHNum + syncTCPNum + syncHTTPNum;
-    	syncDoneVal = doneSSHNum + doneTCPNum + doneHTTPNum;
-        if (((syncDoneVal) / (syncTotalVal) * 100) == 100) {
-        	console.log("[%s] ERROR => Unfinished sync detected. Restarting..", getDateTime());
-        	restartNode();
-        }
-    }
-    shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
-}
-
-shell.on('open', function open() {
-    console.log("[%s] NODE => Connected to sync server", getDateTime());
-});
 
 /*
 	Global FUNCTIONS
@@ -320,22 +299,9 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
 }
 // Background Process
 async function backgroundProcess(total_worker) {
-    if (maxThread >= totalSYNCWorker || maxThread == 0) {
-        maxThread = 15; // worker at once
-        if (total_worker >= 30) {
-            maxThread = Math.round(total_worker / 2);
-        }
-        if (maxThread > 50) {
-            maxThread = 50;
-        }
-        console.log("[%s] Total Threads => %s worker / round", getDateTime(), maxThread);
-        var startThread = 0;
-    }
 
     function bgListener() {
         if (Object.keys(taskObject).length > 0) {
-            if (startThread < maxThread && maxThread != 0) {
-                startThread++;
                 var token = taskObject[0]["token"],
                     worker = taskObject[0]["worker"],
                     workerIP = taskObject[0]["workerIP"],
@@ -345,18 +311,12 @@ async function backgroundProcess(total_worker) {
                     remoteCMD = taskObject[0]["remoteCMD"],
                     isConfig = taskObject[0]["isConfig"];
                 taskObject.splice(0, 1);
-                workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig);
-            }
-            if (dummySSHNum === doneSSHNum && doneSSHNum != 0) {
-                if (maxThread == startThread) {
-                    maxThread = maxThread + maxThread;
-                }
-            }
+                workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig);        
         } else {
             clearInterval(bgListener);
         }
     }
-    setInterval(bgListener, 1 * 100);
+    setInterval(bgListener, 1 * 300);
 }
 // Remote Command Processing
 function convertCommand(remoteCMD, token, worker, workerType) {
@@ -582,14 +542,19 @@ async function apiCallback(worker, callbackType, workerData) {
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, '');
+        const shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
 
         var deflatedJson = new Buffer(jsons, 'utf8');
         zlib.deflate(deflatedJson, function(err, buf) {
             if (err) {
                 console.log("[%s] ERROR => %s", getDateTime(), err.toString());
             } else {
-                console.log("[%s] SYNC => Sending %s kbyte of data", getDateTime(), Math.round(Buffer.byteLength(deflatedJson, 'utf8')) / 1000);
-                shell.send(buf);
+                shell.on('open', function open() {
+                    console.log("[%s] SYNC => Connected to sync server", getDateTime());
+                    console.log("[%s] SYNC => Sending %s kbyte of data", getDateTime(), Math.round(Buffer.byteLength(deflatedJson, 'utf8')) / 1000);
+                    shell.send(buf);
+                    //console.log(buf);
+                });
                 shell.on('message', function incoming(data) {
                     if (data.toString()) {
                         console.log("[%s] SYNC =>  %s", getDateTime(), data);
@@ -602,12 +567,12 @@ async function apiCallback(worker, callbackType, workerData) {
                         // Start New Round after 35 + 5 (40) sec idle
                         setTimeout(function() {
                             restartNode();
-                            //shell.close();
+                            shell.close();
                         }, 35 * 1000);
                     }
                 });
-                shell.on('error', () => restartNode("timeout"));
-                shell.on('close', () => newSocket("close"));
+                shell.on('error', () => restartNode("SYNC Server is not reachable."));
+                shell.on('close', () => console.log("[%s] INFO => Disconnected from the sync server", getDateTime()));
             }
         });
     }
