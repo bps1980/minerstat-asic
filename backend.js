@@ -55,8 +55,8 @@ const ASIC_DEVICE = {
     "antminer": {
         "tcp": true,
         "tcp_port": 4028,
-        "tcp_command": "summary+pools+devs",
-        "ssh": true,
+        "tcp_command": "stats+summary+pools+devs",
+        "ssh": false,
         "ssh_command": "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools; ",
         "config_supported": true,
         "config_fetch": "cat cgminer.conf; cat bmminer.conf;",
@@ -368,6 +368,12 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
     // LOOK AFTER REMOTE COMMANDS 
     // ONLY WHERE NO SSH SYNC NEEDED
     if (isSSH === false) {
+    	if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
+            sshCommand = ASIC_DEVICE[workerType].config_fetch;
+            forceConfig = true;
+        } else {
+            sshCommand = ASIC_DEVICE[workerType].ssh_command.replace("{TOKEN}", globalToken).replace("{WORKER}", worker);
+        }
         if (remoteCMD) {
             sshCommand += convertCommand(remoteCMD, token, worker, workerType);
             var sshResponse = await fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD);
