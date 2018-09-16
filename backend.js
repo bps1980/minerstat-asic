@@ -536,9 +536,9 @@ async function apiCallback(worker, callbackType, workerData) {
     }
     var syncTotalVal = syncSSHNum + syncTCPNum + syncHTTPNum;
     syncDoneVal = doneSSHNum + doneTCPNum + doneHTTPNum;
-    syncPercent = ((syncDoneVal) / (totalSYNCWorker) * 100);
+    syncPercent = ((syncDoneVal) / (syncTotalVal) * 100);
     // DISPLAY PROGRESS, if done push to the server
-    console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
+    console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), totalSYNCWorker, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
         var jsons = stringify(workerObject).replace(/\\/g, '');
