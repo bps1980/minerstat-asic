@@ -104,7 +104,6 @@ function getDateTime() {
 function restartNode(reason) {
     if (reason) {
         console.log("[%s] ERROR => SYNC Server is not reachable.", getDateTime());
-        newSocket();
     }
     setTimeout(function() {
         pid = false;
