@@ -21,8 +21,19 @@ const nets = require('net'),
 /*
 	ERROR HANDLING
 */
+function restart() {
+    app.relaunch()
+    app.exit()
+}
 process.on('uncaughtException', function(err) {
     console.log(colors.grey('NOTICE => %s'), err);
+    // This is only for Ubuntu / Linux
+    // Read about: ulimit -n
+    if (err.toString().includes("EMFILE")) {
+    	console.log("SYSTEM ERROR => Please set ulimit -n (nofile) to unlimited.");
+    	console.log("NODE => Restarting.. Max connection limit has been reached.");
+    	restart();
+    }
 });
 process.on('unhandledRejection', (reason, promise) => {
     console.log(colors.grey('WARNING => %s %s'), reason.stack);
@@ -114,13 +125,6 @@ if (!process.argv.includes("console") && !process.argv.includes("logout")) {
 setTimeout(function() {
     backend.workersRefresh();
 }, 1 * 1000);
-/*
-	Error Handling
-*/
-function restart() {
-    app.relaunch()
-    app.exit()
-}
 /*
 	Core
 */
