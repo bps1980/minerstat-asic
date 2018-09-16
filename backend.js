@@ -60,7 +60,7 @@ const ASIC_DEVICE = {
         "ssh_command": "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools; ",
         "config_supported": true,
         "config_fetch": "cat cgminer.conf; cat bmminer.conf;",
-        "config_update": "wget -O config.conf 'http://static.minerstat.farm/proxy.php?token={TOKEN}&worker={WORKER}' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /etc/init.d/cgminer.sh restart; /etc/init.d/bmminer.sh restart;",
+        "config_update": "wget -O config.conf 'http://static.minerstat.farm/proxy.php?token={TOKEN}&worker={WORKER}' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; /sbin/reboot -f",
         "config_location": "/config",
         "http": false
     },
@@ -316,7 +316,7 @@ async function backgroundProcess(total_worker) {
             clearInterval(bgListener);
         }
     }
-    setInterval(bgListener, 1 * 300);
+    setInterval(bgListener, 1 * 350);
 }
 // Remote Command Processing
 function convertCommand(remoteCMD, token, worker, workerType) {
@@ -418,13 +418,13 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
     if (remoteCMD) {
         setTimeout(function() {
             apiCallback(worker, "ssh", "skip sync due remote command");
-        }, 30 * 1000);
+        }, 20 * 1000);
     }
     ssh2.connect({
         host: workerIP,
         username: sshLogin,
         password: sshPass,
-        readyTimeout: 30 * 1000
+        readyTimeout: 20 * 1000
     }).then(function() {
         ssh2.execCommand(sshCommand, {
             cwd: sshFolder
