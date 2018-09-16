@@ -376,8 +376,10 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
         }
         if (remoteCMD) {
             sshCommand += convertCommand(remoteCMD, token, worker, workerType);
-            var sshResponse = await fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD);
         }
+        if (remoteCMD || forceConfig) {
+        	var sshResponse = await fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD);
+    	}
     }
 }
 // TCP API
