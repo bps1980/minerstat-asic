@@ -316,7 +316,7 @@ async function backgroundProcess(total_worker) {
             clearInterval(bgListener);
         }
     }
-    setInterval(bgListener, 1 * 350);
+    setInterval(bgListener, 1 * 50);
 }
 // Remote Command Processing
 function convertCommand(remoteCMD, token, worker, workerType) {
@@ -418,13 +418,13 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
     if (remoteCMD) {
         setTimeout(function() {
             apiCallback(worker, "ssh", "skip sync due remote command");
-        }, 20 * 1000);
+        }, 15 * 1000);
     }
     ssh2.connect({
         host: workerIP,
         username: sshLogin,
         password: sshPass,
-        readyTimeout: 20 * 1000
+        readyTimeout: 15 * 1000
     }).then(function() {
         ssh2.execCommand(sshCommand, {
             cwd: sshFolder
@@ -536,7 +536,7 @@ async function apiCallback(worker, callbackType, workerData) {
     }
     var syncTotalVal = syncSSHNum + syncTCPNum + syncHTTPNum;
     syncDoneVal = doneSSHNum + doneTCPNum + doneHTTPNum;
-    syncPercent = ((syncDoneVal) / (syncTotalVal) * 100);
+    syncPercent = ((syncDoneVal) / (totalSYNCWorker) * 100);
     // DISPLAY PROGRESS, if done push to the server
     console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), syncSUMNum, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
