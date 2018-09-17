@@ -86,7 +86,6 @@ const ASIC_DEVICE = {
     }
 };
 
-
 /*
 	Global FUNCTIONS
 */
@@ -385,35 +384,34 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
 async function fetchTCP(worker, workerIP, workerType) {
     var response,
         check = 0;
-    const nets = require('net'),
-        clients = nets.createConnection({
+    const nets = require('net');
+    var   clients = nets.createConnection({
             host: workerIP,
             port: ASIC_DEVICE[workerType].tcp_port
         }, () => {
             clients.write(ASIC_DEVICE[workerType].tcp_command);
             console.log("[%s] Fetching TCP => %s {%s}", getDateTime(), worker, workerIP);
         });
+    clients.setTimeout(10 * 1000);
+    clients.on('timeout', () => {
+    	try {
+        	clients.destroy();
+        	clients.end(); // close connection
+        } catch (exception) { }
+    });
+    clients.on('data', (data) => {
+    	check = 1;
+        response += data.toString();
+    });
+    clients.on('close', () => {
+    if (check == 0) { response = "timeout"; }
+	    apiCallback(worker, "tcp", response);
+    });
     clients.on('end', () => {
-        if (check === 0) {
-            apiCallback(worker, "tcp", response);
-            check = 1;
-        }
         try {
         clients.destroy();
         clients.end(); // close connection
         } catch (exception) { }
-    });
-    setTimeout(function() {
-        if (check === 0) {
-            apiCallback(worker, "tcp", "timeout");
-            try {
-            clients.destroy();
-            clients.end(); // close connection
-            } catch (exception) { }
-        }
-    }, 10 * 1000);
-    clients.on('data', (data) => {
-        response += data.toString();
     });
     return response;
 }
