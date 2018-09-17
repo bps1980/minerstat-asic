@@ -55,7 +55,7 @@ const ASIC_DEVICE = {
     "antminer": {
         "tcp": true,
         "tcp_port": 4028,
-        "tcp_command": "stats+summary+pools+devs",
+        "tcp_command": "stats+pools",
         "ssh": false,
         "ssh_command": "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools; ",
         "config_supported": true,
@@ -398,12 +398,18 @@ async function fetchTCP(worker, workerIP, workerType) {
             apiCallback(worker, "tcp", response);
             check = 1;
         }
+        try {
+        clients.destroy();
         clients.end(); // close connection
+        } catch (exception) { }
     });
     setTimeout(function() {
         if (check === 0) {
             apiCallback(worker, "tcp", "timeout");
+            try {
+            clients.destroy();
             clients.end(); // close connection
+            } catch (exception) { }
         }
     }, 10 * 1000);
     clients.on('data', (data) => {
