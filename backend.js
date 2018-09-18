@@ -21,7 +21,7 @@ const path = require('path'),
     electron = require('electron'),
     WebSocket = require('ws'),
     app = electron.app;
-	login_token = "",
+    login_token = "",
     login_group = "";
 var colors = require('colors'),
     fs = require('fs'),
@@ -48,8 +48,8 @@ var colors = require('colors'),
     doneTCPNum = 0,
     doneHTTPNum = 0,
     totalSYNCWorker = 0,
-    maxThread = 6;
-	client = new net.Socket();
+    maxThread = 6,
+    client = new net.Socket();
 	
 const ASIC_DEVICE = {
     "antminer": {
