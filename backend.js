@@ -101,8 +101,11 @@ function getDateTime() {
 }
 // RESTART NODE
 function restartNode(reason) {
-    if (reason) {
+    if (reason == "001") {
         console.log("[%s] ERROR => SYNC Server is not reachable.", getDateTime());
+    }
+    if (reason == "002") {
+        console.log("[%s] INFO => Disconnected from the sync server", getDateTime());
     }
     setTimeout(function() {
         pid = false;
@@ -575,15 +578,13 @@ async function apiCallback(worker, callbackType, workerData) {
                         console.log(colors.cyan("/*/*/*/*/*/*/*/*/*/*/*/*/*/*/"));
                         console.log("");
                         updateStatus(true, "Waiting for the next sync round.");
-                        // Start New Round after 35 + 5 (40) sec idle
-                        setTimeout(function() {
-                            restartNode();
-                            shell.close();
-                        }, 35 * 1000);
                     }
                 });
-                shell.on('error', () => restartNode("SYNC Server is not reachable."));
-                shell.on('close', () => console.log("[%s] INFO => Disconnected from the sync server", getDateTime()));
+                shell.on('error', () => restartNode("001"));
+                shell.on('close', () => restartNode("002"));
+                setTimeout(function() {
+                	shell.close();
+                }, 35 * 1000);
             }
         });
     }
