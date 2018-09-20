@@ -27,13 +27,10 @@ var colors = require('colors'),
     fs = require('fs'),
     node_ssh = require('node-ssh'),
     request = require('request'),
-    await = require('await'),
     needle = require('needle'),
-    async = require('neo-async'),
     stringify = require('json-stable-stringify'),
     net = require('net'),
     zlib = require('zlib'),
-    fullpath = app.getPath("appData"),
     pid = false,
     workerObject = {},
     taskObject = [],
@@ -49,7 +46,12 @@ var colors = require('colors'),
     doneHTTPNum = 0,
     totalSYNCWorker = 0,
     maxThread = 6,
+    fullpath = __dirname,
     client = new net.Socket();
+    
+    if (!process.argv.includes("headless")) {
+    	fullpath = app.getPath("appData");
+    }
 	
 const ASIC_DEVICE = {
     "antminer": {
@@ -261,7 +263,7 @@ function listWorkers(login_token, login_group) {
                     doneSSHNum = 0;
                     doneTCPNum = 0;
                     doneHTTPNum = 0;
-                    // SEND FOR ASYNC PROCESSING
+                    // SEND FOR  PROCESSING
                     workerPreProcess(accesskey, worker, ip_address, type, login, passw, remotecommand, isconfig, current_worker, total_worker);
                 }
             } else {
@@ -277,7 +279,7 @@ function listWorkers(login_token, login_group) {
     })
 }
 // Worker PRE-Processing
-async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig, current_worker, total_worker) {
+ function workerPreProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig, current_worker, total_worker) {
     var preData = {
         token: "" + token,
         worker: "" + worker,
@@ -289,7 +291,7 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
         isConfig: "" + isConfig
     };
     taskObject.push(preData);
-    console.log("[%s] List [%s/%s] => %s worker %s {%s} ›%s/%s‹", getDateTime(), current_worker, total_worker, workerType, worker, workerIP, sshLogin, sshPass);
+    console.log("[%s] List [%s/%s] => %s worker %s {%s} >%s/%s<", getDateTime(), current_worker, total_worker, workerType, worker, workerIP, sshLogin, sshPass);
     dummySSHNum = 0;
     doneSSHNum = 0;
     maxThread = 0;
@@ -299,7 +301,7 @@ async function workerPreProcess(token, worker, workerIP, workerType, sshLogin, s
     }
 }
 // Background Process
-async function backgroundProcess(total_worker) {
+ function backgroundProcess(total_worker) {
 
     function bgListener() {
         if (Object.keys(taskObject).length > 0) {
@@ -335,7 +337,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     }
 }
 // Worker Processing 
-async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig) {
+ function workerProcess(token, worker, workerIP, workerType, sshLogin, sshPass, remoteCMD, isConfig) {
     syncSUMNum++; // +1 worker to sync statistics
     var isTCP = ASIC_DEVICE[workerType].tcp,
         isSSH = ASIC_DEVICE[workerType].ssh,
@@ -343,7 +345,7 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
         sshCommand = "";
     if (isTCP === true) {
         syncTCPNum++; // +1 TCP to statistics
-        var tcpResponse = await fetchTCP(worker, workerIP, workerType);
+        var tcpResponse =  fetchTCP(worker, workerIP, workerType);
     }
     if (isSSH === true) {
         syncSSHNum++; // +1 SSH to statistics
@@ -360,11 +362,11 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
         if (remoteCMD) {
             sshCommand += convertCommand(remoteCMD, token, worker, workerType);
         }
-        var sshResponse = await fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, true, forceConfig, remoteCMD);
+        var sshResponse =  fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, true, forceConfig, remoteCMD);
     }
     if (isHTTP === true) {
         syncHTTPNum++; // +1 HTTP to statistics
-        var httpResponse = await fetchHTTP(worker, workerIP, workerType, sshLogin, sshPass);
+        var httpResponse =  fetchHTTP(worker, workerIP, workerType, sshLogin, sshPass);
     }
     // LOOK AFTER REMOTE COMMANDS 
     // ONLY WHERE NO SSH SYNC NEEDED
@@ -379,12 +381,14 @@ async function workerProcess(token, worker, workerIP, workerType, sshLogin, sshP
             sshCommand += convertCommand(remoteCMD, token, worker, workerType);
         }
         if (remoteCMD || forceConfig) {
-        	var sshResponse = await fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD);
+        	syncSSHNum++; // +1 SSH to statistics
+       		dummySSHNum++ // fake for background processing
+        	var sshResponse =  fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD);
     	}
     }
 }
 // TCP API
-async function fetchTCP(worker, workerIP, workerType) {
+ function fetchTCP(worker, workerIP, workerType) {
     var response,
         check = 0;
     const nets = require('net');
@@ -410,6 +414,7 @@ async function fetchTCP(worker, workerIP, workerType) {
     if (check == 0) { response = "timeout"; }
 	    apiCallback(worker, "tcp", response);
     });
+    clients.on('error', (exception) => {});
     clients.on('end', () => {
         try {
         clients.destroy();
@@ -419,7 +424,7 @@ async function fetchTCP(worker, workerIP, workerType) {
     return response;
 }
 // SSH API & CONTROL
-async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, isCallback, forceConfig, remoteCMD) {
+ function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, isCallback, forceConfig, remoteCMD) {
     console.log("[%s] Fetching SSH => %s {%s}", getDateTime(), worker, workerIP);
     var ssh2 = new node_ssh(),
         sshFolder = "/tmp";
@@ -477,7 +482,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
                 })
             }
         }).catch((error) => {
-            console.log(colors.red("[%s] Error => %s {%s} ›%s/%s‹"), getDateTime(), worker, workerIP, sshLogin, sshPass);
+            console.log(colors.red("[%s] Error => %s {%s} >%s/%s<"), getDateTime(), worker, workerIP, sshLogin, sshPass);
             console.log(colors.red(error));
             if (isCallback == true && forceConfig == false && !remoteCMD) {
                 apiCallback(worker, "ssh", "bad password");
@@ -488,7 +493,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
             }
         });
     }).catch((error) => {
-        console.log(colors.red("[%s] Error => %s {%s} ›%s/%s‹"), getDateTime(), worker, workerIP, sshLogin, sshPass);
+        console.log(colors.red("[%s] Error => %s {%s} >%s/%s<"), getDateTime(), worker, workerIP, sshLogin, sshPass);
         console.log(colors.red(error));
         if (isCallback == true && forceConfig == false && !remoteCMD) {
             apiCallback(worker, "ssh", "timeout");
@@ -500,7 +505,7 @@ async function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshComm
     });
 }
 // HTTP API 
-async function fetchHTTP(worker, workerIP, workerType, httpLogin, httpPass) {
+ function fetchHTTP(worker, workerIP, workerType, httpLogin, httpPass) {
     request({
         url: "http://" + workerIP + ASIC_DEVICE[workerType].http_url,
         headers: {
@@ -511,12 +516,12 @@ async function fetchHTTP(worker, workerIP, workerType, httpLogin, httpPass) {
     });
 }
 // CALLBACK
-async function apiCallback(worker, callbackType, workerData) {
+ function apiCallback(worker, callbackType, workerData) {
     // Progress Callback Data
     var callbackName = callbackType + "_response",
         parseWorkerData = "";
     if (callbackType != "http") {
-        parseWorkerData = workerData.replace(/[^a-zA-Z0-9,=_;.: ]/g, "");
+        parseWorkerData = workerData.replace(/[^a-zA-Z0-9,=_;.-/: ]/g, "");
     } else {
         parseWorkerData = workerData;
         callbackName = "tcp";
@@ -593,9 +598,9 @@ async function apiCallback(worker, callbackType, workerData) {
 /*
 	CORE
 */
-// Export
-module.exports = {
-    workersRefresh: function() {
+
+function globalStart() {
+
         function globalPID() {
             if (pid == false) {
                 pid = true;
@@ -603,5 +608,15 @@ module.exports = {
             }
         }
         setInterval(globalPID, 1 * 1000);
+
+}
+
+if (process.argv.includes("headless")) {
+	globalStart();
+}
+
+module.exports = {
+    workersRefresh: function() {
+	globalStart();
     }
 }
