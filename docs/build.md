@@ -47,13 +47,12 @@ You can start the software with
 Open Terminal / SSH
 
     # Install Dependencies
-    sudo apt-get install git g++ build-essential curl
-    # Prepare
-    sudo apt-get update
     cd ~
     curl -sL https://deb.nodesource.com/setup_9.x -o nodesource_setup.sh
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt-get update
     sudo bash nodesource_setup.sh
-    sudo apt-get install nodejs
+    sudo apt-get install git g++ build-essential curl nodejs
     
 Now you are ready to clone and install minerstat ASIC  
 
@@ -63,9 +62,17 @@ Now you are ready to clone and install minerstat ASIC
     cd minerstat-asic
     npm install
 
-You can start the software with
+Start the software with GUI
 
     npm start
+
+Start the software with GUI (in Terminal)
+
+    npm start console
+    
+Start the software without GUI (Headless for remote servers)
+
+    node backend console headless
 
 
 ## [Mac](#mac)
@@ -95,12 +102,14 @@ Now you are ready to clone and install minerstat ASIC
     cp package-armv7l.json package.json
     npm install
 
-You can start the software with
+Start the software with GUI
 
     npm start
 
+Start the software with GUI (in Terminal)
 
-
+    npm start console
+    
 
 ## [Raspberry](#raspberry)
 
@@ -125,9 +134,17 @@ Now you are ready to clone and install minerstat ASIC
     cp package-armv7l.json package.json
     npm install
 
-You can start the software with
+Start the software with GUI
 
     npm start
+
+Start the software with GUI (in Terminal)
+
+    npm start console
+    
+Start the software without GUI (Headless for remote servers)
+
+    node backend console headless
 
 
 ## [Executable](#executable)
