@@ -31,6 +31,8 @@ var colors = require('colors'),
     stringify = require('json-stable-stringify'),
     net = require('net'),
     zlib = require('zlib'),
+    escapeJSON = require('escape-json-node'),
+    isJSON = require('is-json'),
     pid = false,
     workerObject = {},
     taskObject = [],
@@ -52,28 +54,40 @@ var colors = require('colors'),
     if (!process.argv.includes("headless")) {
     	fullpath = app.getPath("appData");
     }
-	
+
 const ASIC_DEVICE = {
     "antminer": {
-        "tcp": true,
+        "tcp": false,
         "tcp_port": 4028,
         "tcp_command": "stats+pools",
-        "ssh": false,
-        "ssh_command": "cgminer-api stats; cgminer-api pools; bmminer-api stats; bmminer-api pools; ",
+        "ssh": true,
+        "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
         "config_supported": true,
-        "config_fetch": "cat cgminer.conf; cat bmminer.conf;",
-        "config_update": "wget -O config.conf 'http://static.minerstat.farm/proxy.php?token={TOKEN}&worker={WORKER}' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; /sbin/reboot -f",
+        "config_fetch": "rm bak.conf; cp bmminer.conf bak.conf;  cp cgminer.conf bak.conf; rm bmminer.conf; rm cgminer.conf; cat bak.conf; cp bak.conf cgminer.conf; cp bak.conf bmminer.conf;",
+        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /etc/init.d/cgminer.sh restart > /dev/null; /etc/init.d/bmminer.sh restart > /dev/null;",
         "config_location": "/config",
         "http": false
     },
     "baikal": {
         "tcp": false,
         "ssh": true,
-        "ssh_command": "wget -O - https://api.minerstat.com/baikal/{TOKEN}.{WORKER}.sh | bash; ",
+        "ssh_command": "exec 3<>/dev/tcp/127.0.0.1/4028; echo '{\"command\":\"stats+summary+pools+devs\"}' 1>&3; RESPONSE=$(cat <&3); echo $RESPONSE;",
         "config_supported": true,
         "config_fetch": "cat miner.conf",
-        "config_update": "rm miner.conf; wget -O miner.conf 'http://static.minerstat.farm/proxy.php?token={TOKEN}&worker={WORKER}' && sleep 3 && echo done && /sbin/reboot",
+        "config_update": "sleep 5; rm miner.conf; wget -O miner.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=baikal' && sleep 3 && /sbin/reboot > /dev/null",
         "config_location": "/opt/scripta/etc",
+        "http": false
+    },
+    "dayun": {
+        "tcp": false,
+        "tcp_port": 4028,
+        "tcp_command": "stats+pools",
+        "ssh": true,
+        "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
+        "config_supported": true,
+        "config_fetch": "cat cgminer.config;",
+	    "config_update": "sleep 5; rm cgminer.config; wget -O cgminer.config 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=dayun' && sleep 3 && /sbin/reboot > /dev/null",
+        "config_location": "/var/www/html/resources",
         "http": false
     },
     "dragonmint": {
@@ -85,6 +99,18 @@ const ASIC_DEVICE = {
         "http_auth_type": "base64",
         "config_supported": false,
         "config_location": "/tmp"
+    },
+    "innosilicon": {
+        "tcp": false,
+        "tcp_port": 4028,
+        "tcp_command": "stats+pools",
+        "ssh": true,
+        "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
+        "config_supported": false,
+        "config_fetch": "cat cgminer.conf;",
+        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; killall cgminer; sleep 1; cd /var/www; ./run.sh",
+        "config_location": "/home/www/conf",
+        "http": false
     }
 };
 
@@ -356,6 +382,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
         if (isConfig.toString() === "false" && ASIC_DEVICE[workerType].config_supported.toString() == "true") {
             sshCommand = ASIC_DEVICE[workerType].config_fetch;
             forceConfig = true;
+            //remoteCMD = "CONFIG";
         } else {
             sshCommand = ASIC_DEVICE[workerType].ssh_command.replace("{TOKEN}", globalToken).replace("{WORKER}", worker);
         }
@@ -412,7 +439,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     });
     clients.on('close', () => {
     if (check == 0) { response = "timeout"; }
-	    apiCallback(worker, "tcp", response);
+	    apiCallback(worker, "tcp", response, workerType);
     });
     clients.on('error', (exception) => {});
     clients.on('end', () => {
@@ -436,7 +463,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     }
     if (remoteCMD) {
         setTimeout(function() {
-            apiCallback(worker, "ssh", "skip sync due remote command");
+            apiCallback(worker, "ssh", "skip sync due remote command", workerType);
         }, 15 * 1000);
     }
     ssh2.connect({
@@ -451,7 +478,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             response = result.stdout;
             response = response.trim();
             if (isCallback.toString() == "true" && forceConfig.toString() == "false" && !remoteCMD) {
-                apiCallback(worker, "ssh", response);
+                apiCallback(worker, "ssh", response, workerType);
             }
             if (forceConfig.toString() == "true" && isConfig.toString() == "false") {
                 console.log(colors.yellow("[%s] Config => %s {%s} - Upload config to 'Config Editor'"), getDateTime(), worker, workerIP);
@@ -473,10 +500,13 @@ function convertCommand(remoteCMD, token, worker, workerType) {
                 // Start the request
                 request(options, function(error, response, body) {
                     if (!error) {
-                        apiCallback(worker, "ssh", "config edit done");
-                        console.log(colors.green("[%s] Config => %s {%s} - Done"), getDateTime(), worker, workerIP);
+                        apiCallback(worker, "ssh", "config edit done", workerType);
+                        console.log(colors.green("[%s] Config => %s {%s} - Done"), getDateTime(), worker, workerIP); 
+                        // UPDATE & RESTART MINER/MACHINE AFTER CONFIG PUSH                   
+                    	console.log(colors.cyan("[%s] Notice => Your miner now will restart / reboot (New API settings required) "), getDateTime());
+                    	fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, ASIC_DEVICE[workerType].config_update.replace("{TOKEN}", globalToken).replace("{WORKER}", worker), isConfig, isCallback, false, "");                
                     } else {
-                        apiCallback(worker, "ssh", "config edit server error");
+                        apiCallback(worker, "ssh", "config edit server error", workerType);
                         console.log(colors.red("[%s] Error => %s {%s} - %s"), getDateTime(), worker, workerIP, error);
                     }
                 })
@@ -485,10 +515,10 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             console.log(colors.red("[%s] Error => %s {%s} >%s/%s<"), getDateTime(), worker, workerIP, sshLogin, sshPass);
             console.log(colors.red(error));
             if (isCallback == true && forceConfig == false && !remoteCMD) {
-                apiCallback(worker, "ssh", "bad password");
+                apiCallback(worker, "ssh", "bad password",workerType);
             }
             if (forceConfig == true && isConfig == false) {
-                apiCallback(worker, "ssh", "config edit error bad password");
+                apiCallback(worker, "ssh", "config edit error bad password", workerType);
                 console.log(colors.red("[%s] Error => %s {%s} - Config update failed due bad ssh password"), getDateTime(), worker, workerIP);
             }
         });
@@ -499,7 +529,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             apiCallback(worker, "ssh", "timeout");
         }
         if (forceConfig == true && isConfig == false) {
-            apiCallback(worker, "ssh", "config edit timeout");
+            apiCallback(worker, "ssh", "config edit timeout", workerType);
             console.log(colors.red("[%s] Error => %s {%s} - Config update failed due Timeout"), getDateTime(), worker, workerIP);
         }
     });
@@ -512,16 +542,21 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             "Authorization": "Basic " + new Buffer(httpLogin + ":" + httpPass).toString(ASIC_DEVICE[workerType].http_auth_type)
         }
     }, function(error, response, body) {
-        apiCallback(worker, "http", body);
+        apiCallback(worker, "http", body, workerType);
     });
 }
 // CALLBACK
- function apiCallback(worker, callbackType, workerData) {
+ function apiCallback(worker, callbackType, workerData, asicType) {
     // Progress Callback Data
     var callbackName = callbackType + "_response",
         parseWorkerData = "";
     if (callbackType != "http") {
-        parseWorkerData = workerData.replace(/[^a-zA-Z0-9,=_;.-/: ]/g, "");
+        //parseWorkerData = workerData.replace(/[^a-zA-Z0-9,=_;.-/: ]/g, "");
+        if (isJSON(workerData)) {
+        	parseWorkerData = escapeJSON(workerData.replace("}{","},{"));
+        } else {
+        	parseWorkerData = workerData.replace("}{","},{");
+        }
     } else {
         parseWorkerData = workerData;
         callbackName = "tcp";
@@ -530,6 +565,9 @@ function convertCommand(remoteCMD, token, worker, workerType) {
         workerObject[worker] = [];
         workerObject[worker].push({});
         workerObject[worker][0]["token"] = globalToken;
+        workerObject[worker][0]["asicType"] = asicType;
+        workerObject[worker][0]["tcp_response"] = "";
+        workerObject[worker][0]["ssh_response"] = "";
         workerObject[worker][0][callbackName] = parseWorkerData;
         // just in case
         if (typeof workerObject["list"] == "undefined") {
@@ -560,9 +598,10 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     console.log("[%s] Progress {%s%} => Total: %s worker, SSH: %s/%s TCP: %s/%s HTTP: %s/%s", getDateTime(), parseInt(syncPercent), totalSYNCWorker, doneSSHNum, syncSSHNum, doneTCPNum, syncTCPNum, doneHTTPNum, syncHTTPNum);
     if (parseInt(syncPercent) === 100 && totalSYNCWorker == syncSUMNum) {
         //console.log(workerObject);
-        var jsons = stringify(workerObject).replace(/\\/g, '');
+        var jsons = stringify(workerObject);
         const shell = new WebSocket('{PROTOCOL}://{HOST}:{PORT}/{FOLDER}'.replace('{PROTOCOL}', GLOBAL["sync_protocol"]).replace('{HOST}', GLOBAL["sync_server"]).replace('{PORT}', GLOBAL["sync_port"]).replace('{FOLDER}', GLOBAL["sync_endpoint"]));
-
+		//console.log(jsons);
+		
         var deflatedJson = new Buffer(jsons, 'utf8');
         zlib.deflate(deflatedJson, function(err, buf) {
             if (err) {
