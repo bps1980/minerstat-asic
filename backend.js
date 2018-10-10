@@ -106,10 +106,10 @@ const ASIC_DEVICE = {
         "tcp_command": "{\"command\":\"stats+summary+pools\"}",
         "ssh": false,
         "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
-        "config_supported": false,
+        "config_supported": true,
         "config_fetch": "cat cgminer.conf;",
-        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; killall cgminer; sleep 1; cd /var/www; ./run.sh",
-        "config_location": "/home/www/conf",
+        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /sbin/reboot > /dev/null",
+        "config_location": "/config",
         "http": false
     }
 };
