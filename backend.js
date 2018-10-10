@@ -101,10 +101,10 @@ const ASIC_DEVICE = {
         "config_location": "/tmp"
     },
     "innosilicon": {
-        "tcp": false,
+        "tcp": true,
         "tcp_port": 4028,
-        "tcp_command": "stats+pools",
-        "ssh": true,
+        "tcp_command": "{\"command\":\"stats+summary+pools\"}",
+        "ssh": false,
         "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
         "config_supported": false,
         "config_fetch": "cat cgminer.conf;",
