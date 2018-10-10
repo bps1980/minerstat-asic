@@ -108,7 +108,7 @@ const ASIC_DEVICE = {
         "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
         "config_supported": true,
         "config_fetch": "cat cgminer.conf;",
-        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /sbin/reboot > /dev/null",
+        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=innosilicon' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /sbin/reboot > /dev/null",
         "config_location": "/config",
         "http": false
     }
@@ -500,13 +500,13 @@ function convertCommand(remoteCMD, token, worker, workerType) {
                 // Start the request
                 request(options, function(error, response, body) {
                     if (!error) {
-                        apiCallback(worker, "ssh", "config edit done", workerType);
+                        apiCallback(worker, "ssh", "", workerType);
                         console.log(colors.green("[%s] Config => %s {%s} - Done"), getDateTime(), worker, workerIP); 
                         // UPDATE & RESTART MINER/MACHINE AFTER CONFIG PUSH                   
                     	console.log(colors.cyan("[%s] Notice => Your miner now will restart / reboot (New API settings required) "), getDateTime());
                     	fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, ASIC_DEVICE[workerType].config_update.replace("{TOKEN}", globalToken).replace("{WORKER}", worker), isConfig, isCallback, false, "");                
                     } else {
-                        apiCallback(worker, "ssh", "config edit server error", workerType);
+                        apiCallback(worker, "ssh", "", workerType);
                         console.log(colors.red("[%s] Error => %s {%s} - %s"), getDateTime(), worker, workerIP, error);
                     }
                 })
