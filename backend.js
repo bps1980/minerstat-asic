@@ -358,7 +358,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             return GLOBAL["ssh_shutdown"];
             break;
         case 'CONFIG':
-            return ASIC_DEVICE[workerType].config_update.replace("{TOKEN}", globalToken).replace("{WORKER}", worker);
+            return ASIC_DEVICE[workerType].config_update.replace("{TOKEN}", token).replace("{WORKER}", worker);
             break;
     }
 }
