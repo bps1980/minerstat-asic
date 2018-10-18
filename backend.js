@@ -371,7 +371,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
         sshCommand = "";
     if (isTCP === true) {
         syncTCPNum++; // +1 TCP to statistics
-        var tcpResponse =  fetchTCP(worker, workerIP, workerType);
+        var tcpResponse =  fetchTCP(worker, workerIP, workerType, token);
     }
     if (isSSH === true) {
         syncSSHNum++; // +1 SSH to statistics
@@ -384,16 +384,16 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             forceConfig = true;
             //remoteCMD = "CONFIG";
         } else {
-            sshCommand = ASIC_DEVICE[workerType].ssh_command.replace("{TOKEN}", globalToken).replace("{WORKER}", worker);
+            sshCommand = ASIC_DEVICE[workerType].ssh_command.replace("{TOKEN}", token).replace("{WORKER}", worker);
         }
         if (remoteCMD) {
             sshCommand += convertCommand(remoteCMD, token, worker, workerType);
         }
-        var sshResponse =  fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, true, forceConfig, remoteCMD);
+        var sshResponse =  fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, true, forceConfig, remoteCMD, token);
     }
     if (isHTTP === true) {
         syncHTTPNum++; // +1 HTTP to statistics
-        var httpResponse =  fetchHTTP(worker, workerIP, workerType, sshLogin, sshPass);
+        var httpResponse =  fetchHTTP(worker, workerIP, workerType, sshLogin, sshPass, token);
     }
     // LOOK AFTER REMOTE COMMANDS 
     // ONLY WHERE NO SSH SYNC NEEDED
@@ -402,7 +402,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             sshCommand = ASIC_DEVICE[workerType].config_fetch;
             forceConfig = true;
         } else {
-            sshCommand = ASIC_DEVICE[workerType].ssh_command.replace("{TOKEN}", globalToken).replace("{WORKER}", worker);
+            sshCommand = ASIC_DEVICE[workerType].ssh_command.replace("{TOKEN}", token).replace("{WORKER}", worker);
         }
         if (remoteCMD) {
             sshCommand += convertCommand(remoteCMD, token, worker, workerType);
@@ -410,12 +410,12 @@ function convertCommand(remoteCMD, token, worker, workerType) {
         if (remoteCMD || forceConfig) {
         	syncSSHNum++; // +1 SSH to statistics
        		dummySSHNum++ // fake for background processing
-        	var sshResponse =  fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD);
+        	var sshResponse =  fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, false, forceConfig, remoteCMD, token);
     	}
     }
 }
 // TCP API
- function fetchTCP(worker, workerIP, workerType) {
+ function fetchTCP(worker, workerIP, workerType, token) {
     var response,
         check = 0;
     const nets = require('net');
@@ -439,7 +439,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     });
     clients.on('close', () => {
     if (check == 0) { response = "timeout"; }
-	    apiCallback(worker, "tcp", response, workerType);
+	    apiCallback(worker, "tcp", response, workerType, token);
     });
     clients.on('error', (exception) => {});
     clients.on('end', () => {
@@ -451,7 +451,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     return response;
 }
 // SSH API & CONTROL
- function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, isCallback, forceConfig, remoteCMD) {
+ function fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, sshCommand, isConfig, isCallback, forceConfig, remoteCMD, token) {
     console.log("[%s] Fetching SSH => %s {%s}", getDateTime(), worker, workerIP);
     var ssh2 = new node_ssh(),
         sshFolder = "/tmp";
@@ -463,7 +463,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     }
     if (remoteCMD) {
         setTimeout(function() {
-            apiCallback(worker, "ssh", "skip sync due remote command", workerType);
+            apiCallback(worker, "ssh", "skip sync due remote command", workerType, token);
         }, 15 * 1000);
     }
     ssh2.connect({
@@ -478,7 +478,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             response = result.stdout;
             response = response.trim();
             if (isCallback.toString() == "true" && forceConfig.toString() == "false" && !remoteCMD) {
-                apiCallback(worker, "ssh", response, workerType);
+                apiCallback(worker, "ssh", response, workerType, token);
             }
             if (forceConfig.toString() == "true" && isConfig.toString() == "false") {
                 console.log(colors.yellow("[%s] Config => %s {%s} - Upload config to 'Config Editor'"), getDateTime(), worker, workerIP);
@@ -493,20 +493,20 @@ function convertCommand(remoteCMD, token, worker, workerType) {
                     headers: headers,
                     form: {
                         'node': response,
-                        'token': globalToken,
+                        'token': token,
                         'worker': worker
                     }
                 }
                 // Start the request
                 request(options, function(error, response, body) {
                     if (!error) {
-                        apiCallback(worker, "ssh", "", workerType);
+                        apiCallback(worker, "ssh", "", workerType, token);
                         console.log(colors.green("[%s] Config => %s {%s} - Done"), getDateTime(), worker, workerIP); 
                         // UPDATE & RESTART MINER/MACHINE AFTER CONFIG PUSH                   
                     	console.log(colors.cyan("[%s] Notice => Your miner now will restart / reboot (New API settings required) "), getDateTime());
-                    	fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, ASIC_DEVICE[workerType].config_update.replace("{TOKEN}", globalToken).replace("{WORKER}", worker), isConfig, isCallback, false, "");                
+                    	fetchSSH(worker, workerIP, workerType, sshLogin, sshPass, ASIC_DEVICE[workerType].config_update.replace("{TOKEN}", token).replace("{WORKER}", worker), isConfig, isCallback, false, "", token);                
                     } else {
-                        apiCallback(worker, "ssh", "", workerType);
+                        apiCallback(worker, "ssh", "", workerType, token);
                         console.log(colors.red("[%s] Error => %s {%s} - %s"), getDateTime(), worker, workerIP, error);
                     }
                 })
@@ -515,10 +515,10 @@ function convertCommand(remoteCMD, token, worker, workerType) {
             console.log(colors.red("[%s] Error => %s {%s} >%s/%s<"), getDateTime(), worker, workerIP, sshLogin, sshPass);
             console.log(colors.red(error));
             if (isCallback == true && forceConfig == false && !remoteCMD) {
-                apiCallback(worker, "ssh", "bad password",workerType);
+                apiCallback(worker, "ssh", "bad password",workerType, token);
             }
             if (forceConfig == true && isConfig == false) {
-                apiCallback(worker, "ssh", "config edit error bad password", workerType);
+                apiCallback(worker, "ssh", "config edit error bad password", workerType, token);
                 console.log(colors.red("[%s] Error => %s {%s} - Config update failed due bad ssh password"), getDateTime(), worker, workerIP);
             }
         });
@@ -526,27 +526,27 @@ function convertCommand(remoteCMD, token, worker, workerType) {
         console.log(colors.red("[%s] Error => %s {%s} >%s/%s<"), getDateTime(), worker, workerIP, sshLogin, sshPass);
         console.log(colors.red(error));
         if (isCallback == true && forceConfig == false && !remoteCMD) {
-            apiCallback(worker, "ssh", "timeout");
+            apiCallback(worker, "ssh", "timeout", token);
         }
         if (forceConfig == true && isConfig == false) {
-            apiCallback(worker, "ssh", "config edit timeout", workerType);
+            apiCallback(worker, "ssh", "config edit timeout", workerType, token);
             console.log(colors.red("[%s] Error => %s {%s} - Config update failed due Timeout"), getDateTime(), worker, workerIP);
         }
     });
 }
 // HTTP API 
- function fetchHTTP(worker, workerIP, workerType, httpLogin, httpPass) {
+ function fetchHTTP(worker, workerIP, workerType, httpLogin, httpPass, token) {
     request({
         url: "http://" + workerIP + ASIC_DEVICE[workerType].http_url,
         headers: {
             "Authorization": "Basic " + new Buffer(httpLogin + ":" + httpPass).toString(ASIC_DEVICE[workerType].http_auth_type)
         }
     }, function(error, response, body) {
-        apiCallback(worker, "http", body, workerType);
+        apiCallback(worker, "http", body, workerType, token);
     });
 }
 // CALLBACK
- function apiCallback(worker, callbackType, workerData, asicType) {
+ function apiCallback(worker, callbackType, workerData, asicType, token) {
     // Progress Callback Data
     var callbackName = callbackType + "_response",
         parseWorkerData = "";
@@ -564,7 +564,7 @@ function convertCommand(remoteCMD, token, worker, workerType) {
     if (typeof workerObject[worker] == "undefined") {
         workerObject[worker] = [];
         workerObject[worker].push({});
-        workerObject[worker][0]["token"] = globalToken;
+        workerObject[worker][0]["token"] = token;
         workerObject[worker][0]["asicType"] = asicType;
         workerObject[worker][0]["tcp_response"] = "";
         workerObject[worker][0]["ssh_response"] = "";
