@@ -64,7 +64,7 @@ const ASIC_DEVICE = {
         "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
         "config_supported": true,
         "config_fetch": "rm bak.conf; cp bmminer.conf bak.conf;  cp cgminer.conf bak.conf; rm bmminer.conf; rm cgminer.conf; cat bak.conf; cp bak.conf cgminer.conf; cp bak.conf bmminer.conf;",
-        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /etc/init.d/cgminer.sh restart > /dev/null; /etc/init.d/bmminer.sh restart > /dev/null;",
+        "config_update": "mount -o remount,rw /; sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=antminer' && sleep 3 && rm bmminer.conf; rm cgminer.conf; cp config.conf bmminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /etc/init.d/cgminer.sh restart > /dev/null; /etc/init.d/bmminer.sh restart > /dev/null;",
         "config_location": "/config",
         "http": false
     },
@@ -74,7 +74,7 @@ const ASIC_DEVICE = {
         "ssh_command": "exec 3<>/dev/tcp/127.0.0.1/4028; echo '{\"command\":\"stats+summary+pools+devs\"}' 1>&3; RESPONSE=$(cat <&3); echo $RESPONSE;",
         "config_supported": true,
         "config_fetch": "cat miner.conf",
-        "config_update": "sleep 5; rm miner.conf; wget -O miner.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=baikal' && sleep 3 && /sbin/reboot > /dev/null",
+        "config_update": "mount -o remount,rw /; sleep 5; rm miner.conf; wget -O miner.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=baikal' && sleep 3 && /sbin/reboot > /dev/null",
         "config_location": "/opt/scripta/etc",
         "http": false
     },
@@ -86,7 +86,7 @@ const ASIC_DEVICE = {
         "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
         "config_supported": true,
         "config_fetch": "cat cgminer.config;",
-	    "config_update": "sleep 5; rm cgminer.config; wget -O cgminer.config 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=dayun' && sleep 3 && /sbin/reboot > /dev/null",
+	    "config_update": "mount -o remount,rw /; sleep 5; rm cgminer.config; wget -O cgminer.config 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=dayun' && sleep 3 && /sbin/reboot > /dev/null",
         "config_location": "/var/www/html/resources",
         "http": false
     },
@@ -108,7 +108,7 @@ const ASIC_DEVICE = {
         "ssh_command": "echo '{\"command\":\"stats+summary+pools\"}' | nc 127.0.0.1 4028",
         "config_supported": true,
         "config_fetch": "cat cgminer.conf;",
-        "config_update": "sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=innosilicon' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; /sbin/reboot > /dev/null",
+        "config_update": "mount -o remount,rw /; sleep 5; wget -O config.conf 'http://static.minerstat.farm/asicproxy.php?token={TOKEN}&worker={WORKER}&type=innosilicon' && sleep 3 rm cgminer.conf; cp config.conf cgminer.conf; cp config.conf cgminer.conf; rm config.conf; sleep 1; rm /etc/cgminer.conf; cp cgminer.conf /etc; sleep 1; /sbin/reboot > /dev/null",
         "config_location": "/config",
         "http": false
     }
