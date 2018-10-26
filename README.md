@@ -6,7 +6,7 @@
 
 ## Looking for more easy solution?
 
-Try our new <a href="https://github.com/minerstat/minerstat-asic-hub">ASIC HUB</a> software, what need to install on the ASIC - no external software required.
+Try our new <a href="https://github.com/minerstat/minerstat-asic-hub">ASIC HUB</a> software, what need to install on the ASIC - no external software / computer required.
 
 ## How it works?
 
