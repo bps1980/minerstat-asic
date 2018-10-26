@@ -4,6 +4,10 @@
 
 **minerstat for ASIC** is mining monitoring and management software for your **Antminer** and/or **Baikal** machines.
 
+## Looking for more easy solution?
+
+Try our new <a href="https://github.com/minerstat/minerstat-asic-hub">ASIC HUB</a> software, what need to install on the ASIC - no external software required.
+
 ## How it works?
 
 <img src="https://raw.githubusercontent.com/minerstat/minerstat-asic/master/docs/works.svg?sanitize=true" width="65%">
