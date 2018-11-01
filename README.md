@@ -32,7 +32,7 @@ Execute the following command:
 wget -O install.sh https://raw.githubusercontent.com/minerstat/minerstat-asic/master/install.sh && chmod 777 install.sh && sh install.sh
 ```
 
-* If you decide to use the node on Linux/Ubuntu make sure you have set "ulimit -n ulimited" on your system.
+* If you decide to use the node on Linux/Ubuntu make sure you have set "ulimit -n unlimited" on your system.
 More info about here: https://github.com/minerstat/minerstat-asic/blob/master/docs/ulimit.md
 
 <img src="https://cdn.rawgit.com/minerstat/minerstat-asic/master/docs/minerstat_ui.png" width="90%">
