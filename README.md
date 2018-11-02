@@ -4,7 +4,7 @@
 
 **minerstat for ASIC** is mining monitoring and management software for your **Antminer** and/or **Baikal** machines.
 
-## Linux - Headless Installation & Update
+## Linux - Installation & Update without GUI (Headless for remote servers)
 
 Execute the following command:
 ``` sh
@@ -13,6 +13,10 @@ wget -O install.sh https://raw.githubusercontent.com/minerstat/minerstat-asic/ma
 
 * If you decide to use the node on Linux/Ubuntu make sure you have set "ulimit -n unlimited" on your system.
 More info about here: https://github.com/minerstat/minerstat-asic/blob/master/docs/ulimit.md
+
+After you can (re)Start the software 
+
+    node backend console headless
 
 ## Looking for more easy solution?
 
