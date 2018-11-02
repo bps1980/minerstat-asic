@@ -4,6 +4,16 @@
 
 **minerstat for ASIC** is mining monitoring and management software for your **Antminer** and/or **Baikal** machines.
 
+## Linux - Headless Installation & Update
+
+Execute the following command:
+``` sh
+wget -O install.sh https://raw.githubusercontent.com/minerstat/minerstat-asic/master/install.sh && chmod 777 install.sh && sh install.sh
+```
+
+* If you decide to use the node on Linux/Ubuntu make sure you have set "ulimit -n unlimited" on your system.
+More info about here: https://github.com/minerstat/minerstat-asic/blob/master/docs/ulimit.md
+
 ## Looking for more easy solution?
 
 Try our new <a href="https://github.com/minerstat/minerstat-asic-hub">ASIC HUB</a> software, what need to install on the ASIC - no external software / computer required.
@@ -24,16 +34,6 @@ NOTICE: This is an **Open**-**source software** that means you can always check 
 
 
 continuous build - up to date with commits
-
-## Linux - Headless Installation & Update
-
-Execute the following command:
-``` sh
-wget -O install.sh https://raw.githubusercontent.com/minerstat/minerstat-asic/master/install.sh && chmod 777 install.sh && sh install.sh
-```
-
-* If you decide to use the node on Linux/Ubuntu make sure you have set "ulimit -n unlimited" on your system.
-More info about here: https://github.com/minerstat/minerstat-asic/blob/master/docs/ulimit.md
 
 <img src="https://cdn.rawgit.com/minerstat/minerstat-asic/master/docs/minerstat_ui.png" width="90%">
 
